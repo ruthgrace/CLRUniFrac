@@ -15,9 +15,13 @@ Unweighted UniFrac distance is calculated using a phylogenetic tree, accounting 
 CLR weighted UniFrac is weighted by the CLR value at each node of the phylogenetic tree, if all the read counts from all the OTUs under the node are treated as if they come from one OTU. The formula for combining two CLR values into one combined CLR value, given the previous geometric mean and the previous number of items in the group is:
 ```
 new CLR = log (old CLR 1 + old CLR 2) - new mean
-= log(2^(old CLR 1 + old mean) + 2^(old CLR 1 + old mean)) - (old mean * previous number of items - old CLR 1 - old CLR 2 + log(2^(old CLR 1 + old mean) + 2^(old CLR 1 + old mean)))/new number of items
-new CLR = log (old CLR 1 + old CLR 2) - new mean
-= log(2^(old CLR 1 + old mean) + 2^(old CLR 1 + old mean)) - (old mean * previous number of items - old CLR 1 - old CLR 2 + log(2^(old CLR 1 + old mean) + 2^(old CLR 1 + old mean)))/(previous number of items - 1)
+= log(2^(old CLR 1 + old mean) + 2^(old CLR 1 + old mean)) -
+(old mean * previous number of items - old CLR 1 - old CLR 2
+	+ log(2^(old CLR 1 + old mean) + 2^(old CLR 1 + old mean)))/new number of items
+= log(2^(old CLR 1 + old mean) + 2^(old CLR 1 + old mean)) -
+(old mean * previous number of items - old CLR 1 - old CLR 2
+	+ log(2^(old CLR 1 + old mean) + 2^(old CLR 1 + old mean)))/
+(previous number of items - 1)
 ```
 and the code for that is
 
