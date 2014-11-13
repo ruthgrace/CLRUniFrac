@@ -109,6 +109,7 @@ CorrectCLRUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
 		node <- edge[tip.loc, 1]						# Assume the direction of edge 
 		node.loc <- which(edge2 == node)
 		while (length(node.loc)) {
+			#calculate what the centered log ratio transform would be for this node if all the read counts under it were counted under one taxa
 			oldMean <- geometricMean[node.loc, cum[node.loc, ]!=0 & otu.tab[, i]!=0]
 			numSamples <- effectiveNumSamples[node.loc, cum[node.loc, ]!=0 & otu.tab[, i]!=0]
 			x <- cum[node.loc, cum[node.loc, ]!=0 & otu.tab[, i]!=0]
