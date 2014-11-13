@@ -46,7 +46,7 @@ CorrectCLRUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
 	
 	otu.tab <- data.matrix(otu.tab)
 	#remove all OTUs that have no counts in all samples
-	otu.tab <- otu.tab[which(rowSums(otu.tab))!=0]
+	otu.tab <- otu.tab[which(rowSums(otu.tab)!=0),]
 	# add prior of 0.5 -- zero counts are assumed to represent presence half the time
 	otu.tab[otu.tab==0] <- 0.5
 	otu.tab.mean <- apply(otu.tab, 1, function(x) {mean(log2(x))} )
