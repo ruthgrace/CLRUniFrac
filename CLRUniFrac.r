@@ -1,4 +1,15 @@
 ##############################################################
+# 
+# Hacked by Ruth Grace Wong (ruthgracewong@gmail.com)
+# to use weightings based on Centered Log Ratio transformed
+# OTU count values (rather than proportional abundance)
+#
+# * doesn't do variance adjusted unifrac distances anymore.
+#
+#
+#
+# ORIGINAL PACKAGE INFORMATION (most of the code copied from here)
+# 
 # GUniFrac: Generalized UniFrac distances for comparing microbial
 #						communities.
 # Jun Chen (chenjun@mail.med.upenn.edu)
@@ -8,11 +19,12 @@
 # composition with environmental covariates using generalized 
 # UniFrac distances. (Submitted)
 ###############################################################
+
 require(ade4)
 require(ape)
 require(vegan)
 
-GUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
+CorrectCLRUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
 	# Calculate Generalized UniFrac distances. Unweighted and 
 	# Variance-adjusted UniFrac distances will also be returned.
 	#	
@@ -28,17 +40,26 @@ GUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
 	#
 
 	if (!is.rooted(tree)) stop("Rooted phylogenetic tree required!")
+
+
+	# Convert into CLR
 	
-	# Convert into proportions
-	otu.tab <- as.matrix(otu.tab)
-	row.sum <- rowSums(otu.tab)
-	otu.tab <- otu.tab / row.sum
+	otu.tab <- data.matrix(otu.tab)
+	#remove all OTUs that have no counts in all samples
+	otu.tab <- otu.tab[which(rowSums(otu.tab))!=0]
+	# add prior of 0.5 -- zero counts are assumed to represent presence half the time
+	otu.tab[otu.tab==0] <- 0.5
+	otu.tab.mean <- apply(otu.tab, 1, function(x) {mean(log2(x))} )
+	numOTUs <- rowSums(otu.tab!=0) # how many in each column is not zero
+	otu.tab.clr <- apply(otu.tab, 1, function(x){log2(x) - mean(log2(x))})
+	otu.tab.clr <- t(otu.tab.clr)
 	n <- nrow(otu.tab)
-	
+
 	# Construct the returning array
 	if (is.null(rownames(otu.tab))) {
 		rownames(otu.tab) <- paste("comm", 1:n, sep="_")
 	}
+
 	# d_UW: unweighted UniFrac, d_VAW: weighted UniFrac
 	dimname3 <- c(paste("d", alpha, sep="_"), "d_UW", "d_VAW")
 	unifracs <- array(NA, c(n, n, length(alpha) + 2),
@@ -72,51 +93,61 @@ GUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
 	edge2 <- edge[, 2]
 	br.len <- tree$edge.length
 	
-	#  Accumulate OTU proportions up the tree	
+	#  Accumulate OTU CLR measurements up the tree
 	cum <- matrix(0, nbr, n)							# Branch abundance matrix
+	effectiveNumSamples <- matrix(0, nbr, n)	#number of children
+	effectiveNumSamples <- t(apply(effectiveNumSamples,1,function(x) numOTUs))
+	clrcum <- matrix(0, nbr, n)							# clr cumulative
+	geometricMean <- matrix(0, nbr, n)							# center of clr
+	
+	
 	for (i in 1:ntip) {
 		tip.loc <- which(edge2 == i)
-		cum[tip.loc, ] <- cum[tip.loc, ] + otu.tab[, i]	
+		cum[tip.loc, ] <- cum[tip.loc, ] + otu.tab[, i]
+		clrcum[tip.loc, ] <- otu.tab.clr[, i]
+		geometricMean[tip.loc, ] <- otu.tab.mean
 		node <- edge[tip.loc, 1]						# Assume the direction of edge 
 		node.loc <- which(edge2 == node)
 		while (length(node.loc)) {
-			cum[node.loc, ] <- cum[node.loc, ] + otu.tab[, i]		
+			oldMean <- geometricMean[node.loc, cum[node.loc, ]!=0 & otu.tab[, i]!=0]
+			numSamples <- effectiveNumSamples[node.loc, cum[node.loc, ]!=0 & otu.tab[, i]!=0]
+			x <- cum[node.loc, cum[node.loc, ]!=0 & otu.tab[, i]!=0]
+			y <- otu.tab[cum[node.loc, ]!=0 & otu.tab[, i]!=0, i]
+			newMean <- ( (oldMean*numSamples) - log2(x) - log2(y) + log2(x+y) )/numSamples-1
+			geometricMean[node.loc, cum[node.loc, ]!=0 & otu.tab[, i]!=0] <- newMean
+			geometricMean[node.loc,  geometricMean[node.loc,]==0]<- otu.tab.mean[geometricMean[node.loc,]==0]
+			cum[node.loc, ] <- cum[node.loc, ] + otu.tab[, i]
+			effectiveNumSamples[node.loc, otu.tab[, i]!=0] <- effectiveNumSamples[node.loc, otu.tab[, i]!=0] - 1
+			clrcum[node.loc,cum[node.loc, ]!=0 & otu.tab[, i]!=0] <- log2(cum[node.loc, cum[node.loc, ]!=0 & otu.tab[, i]!=0]) - geometricMean[node.loc,cum[node.loc, ]!=0 & otu.tab[, i]!=0]
 			node <- edge[node.loc, 1]
 			node.loc <- which(edge2 == node)
 		}
 	}
 	
-	# Calculate various UniFrac distances
-	cum.ct <- round(t(t(cum) * row.sum)) 	# For VAW
+	
 	for (i in 2:n) {
 		for (j in 1:(i-1)) {
-			cum1 <- cum[, i]
-			cum2 <- cum[, j]
+			cum1 <- clrcum[, i]
+			cum2 <- clrcum[, j]
 			ind <- (cum1 + cum2) != 0
 			cum1 <- cum1[ind]
 			cum2 <- cum2[ind]		
 			br.len2 <- br.len[ind]			
-			mi <- cum.ct[ind, i] + cum.ct[ind, j]
-			mt <- row.sum[i] + row.sum[j]			
-			diff <- abs(cum1 - cum2) / (cum1 + cum2)		
+			#aitchison distance, like log fold change
+			diff <- abs(cum1-cum2)	
 			
 			# Generalized UniFrac distance
 			for(k in 1:length(alpha)){
 				w <- br.len2 * (cum1 + cum2)^alpha[k]
 				unifracs[i, j, k] <- unifracs[j, i, k] <- sum(diff * w) / sum(w)
 			}			
-			
-			#	Variance Adjusted UniFrac Distance
-			ind2 <- (mt != mi)
-			w <- br.len2 * (cum1 + cum2) / sqrt(mi * (mt - mi))
-			unifracs[i, j, (k + 2)] <- unifracs[j, i, (k + 2)] <- 
-					sum(diff[ind2] * w[ind2]) / sum(w[ind2])		
-			
+						
 			#	Unweighted UniFrac Distance
 			cum1 <- (cum1 != 0)
 			cum2 <- (cum2 != 0)			
 			unifracs[i, j, (k + 1)] <- unifracs[j, i, (k + 1)] <- 
 					sum(abs(cum1 - cum2) / (cum1 + cum2) * br.len2) / sum(br.len2)
+
 		}
 	}
 	return(list(unifracs=unifracs))
