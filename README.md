@@ -38,6 +38,23 @@ effectiveNumSamples[node.loc, otu.tab[, i]!=0] <- effectiveNumSamples[node.loc, 
 clrcum[node.loc,cum[node.loc, ]!=0 & otu.tab[, i]!=0] <- log2(cum[node.loc, cum[node.loc, ]!=0 & otu.tab[, i]!=0]) - geometricMean[node.loc,cum[node.loc, ]!=0 & otu.tab[, i]!=0]
 ```
 
+##CLR weighting vs. proportional abundance weighting
+
+####Better separation?
+
+My very preliminary tests show that the CLR weighting may allow more subtle differences to be separated better. For example, in this proportional abundance weighting of a set of vaginal microbiome samples, samples diagnosed with bacterial vaginosis (BV) and normal samples separate very well.
+![proportional abundance weighted UniFrac PCOA](images_for_readme/gunifrac_pcoa.png)
+In the CLR weighted version, not only does BV separate from normal, but you can also see a good separation between the Lactobacillus Crispatus and the Lactobacillus Iners dominated normal samples
+![CLR weighted UniFrac PCOA](images_for_readme/clr_pcoa.png)
+
+####Better correlation with overlap?
+
+I've also caculated overlap by adding something to all CLR values to make them positive, and making pairwise comparisions where I summed the minimum CLR value per OTU and divided it by the maximum value for each OTU, producing an overlap metric between 0 and 1. By plotting these values with the UniFrac distance produced, it appears that CLR weighting may correlate better with overlap, as visualized by the lowess line of best fit in yellow.
+![proportional abundance weighted UniFrac vs. overlap](images_for_readme/gunifrac_overlap.png)
+![CLR weighted UniFrac vs. overlap](images_for_readme/clr_overlap.png)
+
+Furthermore, 
+
 ##Files
 
 ####Files in main folder
