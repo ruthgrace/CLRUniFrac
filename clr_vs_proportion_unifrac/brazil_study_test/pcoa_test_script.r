@@ -9,29 +9,33 @@ source("../../CLRUniFrac.R")
 #this GUniFrac script was ripped straight from the GUniFrac package, with no changes.
 source("../../GUniFrac.R")
 
+# read OTU table and format appropriately for input into UniFrac methods
 brazil.otu.tab <- read.table("./brazil_study_data/td_OTU_tag_mapped_RDPlineage_blastcorrected_vvcfilter_tempgenera.txt", header=T, sep="\t", row.names=1, comment.char="", check.names=FALSE)
 taxonomy <- brazil.otu.tab$taxonomy
 brazil.otu.tab <- brazil.otu.tab[-length(colnames(brazil.otu.tab))]
 brazil.otu.tab <- t(as.matrix(brazil.otu.tab))
 
+# read and root tree (rooted tree is required)
 brazil.tree <- read.tree("./brazil_study_data/fasttree_all_seed_OTUs.tre")
 brazil.tree <- midpoint(brazil.tree)
 
+# read metadata
 MyMeta<- read.table("./brazil_study_data/metadata_BVsamplesonly.txt", header=T, sep="\t", row.names=1, comment.char="", check.names=FALSE)
 
+# filter OTU table and metadata so that only samples which appear in both are retained
 otu_indicies <- match(rownames(MyMeta),rownames(brazil.otu.tab))
 otu_indicies <- otu_indicies[!is.na(otu_indicies)]
-
 brazil.otu.tab <- brazil.otu.tab[otu_indicies,]
-
 MyMetaOrdered <- MyMeta[match(rownames(brazil.otu.tab),rownames(MyMeta)),]
 
-
+#run CLRUniFrac and GUniFrac for comparison, puts distance matrix in ruthClrUnifrac and gUnifrac
 ruthClrUnifrac <- CLRUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
 gUnifrac <- GUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
 
+#conditions (bv - bacterial vaginosis as scored by nugent/amsel, i - intermediate, n - normal/healthy)
 groups <- MyMetaOrdered$n_status #levels bv, i, n
 
+# change conditions so that samples which are more than 50% one taxa are colored by that taxa
 otuSum <- apply(brazil.otu.tab,1,sum)
 otuMax <- apply(brazil.otu.tab,1,max)
 otuWhichMax <- apply(brazil.otu.tab,1,which.max)
@@ -44,35 +48,7 @@ taxonomyGroups <- as.factor(taxonomyGroups)
 
 groups <- taxonomyGroups
 
-
-ruthClrUnifrac.pca <- pcoa(ruthClrUnifrac)
-gUnifrac.pca <- pcoa(gUnifrac)
-
-ruthClrUnifrac.varExplained <- sum(apply(ruthClrUnifrac.pca$vector,2,function(x) sd(x)*sd(x)))
-gUnifrac.varExplained <- sum(apply(gUnifrac.pca$vector,2,function(x) sd(x)*sd(x)))
-
-ruthClrUnifrac.pc1.varEx <- sd(ruthClrUnifrac.pca$vector[,1])*sd(ruthClrUnifrac.pca$vector[,1])/ruthClrUnifrac.varExplained
-ruthClrUnifrac.pc2.varEx <- sd(ruthClrUnifrac.pca$vector[,2])*sd(ruthClrUnifrac.pca$vector[,2])/ruthClrUnifrac.varExplained
-
-gUnifrac.pc1.varEx <- sd(gUnifrac.pca$vector[,1])*sd(gUnifrac.pca$vector[,1])/gUnifrac.varExplained
-gUnifrac.pc2.varEx <- sd(gUnifrac.pca$vector[,2])*sd(gUnifrac.pca$vector[,2])/gUnifrac.varExplained
-
-
-# test overlap & read count correlations
-
-source("../metrics.r")
-
-# overlap <- getOverlap(MyOTU)
-# avg <- averageReadCount(MyOTU)
-
-overlap <- getOverlap(brazil.otu.tab)
-
-avg <- averageReadCount(brazil.otu.tab)
-
-# overlap <- getOverlap(throat.otu.tab)
-
-# avg <- averageReadCount(throat.otu.tab)
-
+# assign appropriate names to single taxa dominated groups
 newLevels <- levels(taxonomyGroups)
 splittaxa <- strsplit(levels(taxonomyGroups),split=";")
 
@@ -87,65 +63,119 @@ for (i in 1:length(splittaxa)) {
 
 levels(taxonomyGroups) <- newLevels
 
-#triangle your data and put into list
+
+# caculate pcoa vectors
+ruthClrUnifrac.pcoa <- pcoa(ruthClrUnifrac)
+gUnifrac.pcoa <- pcoa(gUnifrac)
+
+# calculate total variance explained
+ruthClrUnifrac.varExplained <- sum(apply(ruthClrUnifrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
+gUnifrac.varExplained <- sum(apply(gUnifrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
+
+# calculate proportion of variance explained by first component
+ruthClrUnifrac.pc1.varEx <- sd(ruthClrUnifrac.pcoa$vector[,1])*sd(ruthClrUnifrac.pcoa$vector[,1])/ruthClrUnifrac.varExplained
+ruthClrUnifrac.pc2.varEx <- sd(ruthClrUnifrac.pcoa$vector[,2])*sd(ruthClrUnifrac.pcoa$vector[,2])/ruthClrUnifrac.varExplained
+
+#calculate proportion of variance explained by second component
+gUnifrac.pc1.varEx <- sd(gUnifrac.pcoa$vector[,1])*sd(gUnifrac.pcoa$vector[,1])/gUnifrac.varExplained
+gUnifrac.pc2.varEx <- sd(gUnifrac.pcoa$vector[,2])*sd(gUnifrac.pcoa$vector[,2])/gUnifrac.varExplained
+
+
+# test overlap & read count correlations
+source("../metrics.r")
+
+overlap <- getOverlap(brazil.otu.tab)
+avg <- averageReadCount(brazil.otu.tab)
+
+
+#put metrics matricies into single dimensional vectors for plotting
 overlap.vector <- unlist(overlap[lower.tri(overlap,diag=TRUE)])
 avg.vector <- unlist(avg[lower.tri(avg,diag=TRUE)])
 
+#put distance matrices into single dimensional vectors for plotting
 ruthClrUnifrac.vector <- unlist(ruthClrUnifrac[lower.tri(ruthClrUnifrac,diag=TRUE)])
 gUnifrac.vector <- unlist(gUnifrac[lower.tri(gUnifrac,diag=TRUE)])
 
+#save plots as PDF
 pdf("test_plots_with_brazil_study_data.pdf")
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#for this data set, the colors represent
+#  chocolate4: gardnerella vaginalis
+#  darkolivegreen: prevotella bivia
+#  cyan: lactobacillus crispatus
+#  dodgerblue: lactobacillus iners
+#  navy: lactobacillus gasseri(johnsonii)
+#  magenta: streptococcus (unclassified)
+#samples not dominated 50% or more by a single species:
+#  red: bacterial vaginosis
+#  orange: intermediate
+#  blue: normal/healthy
 palette(c("chocolate4","darkolivegreen","cyan","dodgerblue","navy","magenta","red","orange","blue","black"))
 
-#plot
+#plot overlap vs clrunifrac distance
 plot(ruthClrUnifrac.vector,overlap.vector,main="clr combination weights vs overlap")
-
+#plot lowess line of best fit
 lines(lowess(ruthClrUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
 
+#repeat for gunifrac
 plot(gUnifrac.vector,overlap.vector,main="gunifrac vs overlap")
-
 lines(lowess(gUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
 
+#plot number of reads vs unifrac distances (checking for read count bias)
 plot(ruthClrUnifrac.vector,avg.vector,main="clr combination weights vs avg")
 plot(gUnifrac.vector,avg.vector,main="gunifrac vs avg")
 
-plot(ruthClrUnifrac.pca$vectors[,1],ruthClrUnifrac.pca$vectors[,2], type="p",col=groups,main="clr combination weights",xlab=paste("First Component", ruthClrUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", ruthClrUnifrac.pc2.varEx,"variance explained"))
-
+#plot pcoa plots with legend
+plot(ruthClrUnifrac.pcoa$vectors[,1],ruthClrUnifrac.pcoa$vectors[,2], type="p",col=groups,main="clr combination weights",xlab=paste("First Component", ruthClrUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", ruthClrUnifrac.pc2.varEx,"variance explained"))
 legend(0.5,1.5,levels(taxonomyGroups),col=palette(),pch=1)
 
-
-
-plot(gUnifrac.pca$vectors[,1],gUnifrac.pca$vectors[,2], col=groups,main="gunifrac",xlab=paste("First Component", gUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", gUnifrac.pc2.varEx,"variance explained"))
-
+plot(gUnifrac.pcoa$vectors[,1],gUnifrac.pcoa$vectors[,2], col=groups,main="gunifrac",xlab=paste("First Component", gUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", gUnifrac.pc2.varEx,"variance explained"))
 legend(0.1,0.3,levels(taxonomyGroups),col=palette(),pch=1)
 
-
+#change color palette for qiime output data (no otu count information for dominant taxa)
+# red for bacterial vaginosis, orange for intermediate, blue for normal/healthy
 palette(c("red","orange","blue","black"))
 
+# read in unifrac distances from qiime
 unifracWeights <- read.table("./brazil_study_data/weighted_unifrac_dm_from_qiime.txt", header=T, sep="\t", row.names=1, comment.char="", check.names=FALSE)
+#match up with metadata
 indicies <- match(rownames(MyMeta),rownames(unifracWeights))
 indicies <- indicies[!is.na(indicies)]
-
 unifracWeightsFiltered <- unifracWeights[indicies,indicies]
-
 meta_indicies <- match(colnames(unifracWeightsFiltered),rownames(MyMeta))
 meta_indicies <- meta_indicies[!is.na(meta_indicies)]
+#set condition (bv/i/n)
 groups <- MyMeta[meta_indicies,]$n_status
 
+#calculate pcoa
 unifracWeightsFiltered.ape.pcoa <- pcoa(unifracWeightsFiltered)
 
-
+#calculate proportion of variance explained by 1st and 2nd components
 unifracWeightsFiltered.varExplained <- sum(apply(unifracWeightsFiltered.ape.pcoa$vector,2,function(x) sd(x)*sd(x)))
-
 unifracWeightsFiltered.pc1.varEx <- sd(unifracWeightsFiltered.ape.pcoa$vector[,1])*sd(unifracWeightsFiltered.ape.pcoa$vector[,1])/unifracWeightsFiltered.varExplained
 unifracWeightsFiltered.pc2.varEx <- sd(unifracWeightsFiltered.ape.pcoa$vector[,2])*sd(unifracWeightsFiltered.ape.pcoa$vector[,2])/unifracWeightsFiltered.varExplained
 
+#plot qiime unifrac distances pcoa with legend
 plot(unifracWeightsFiltered.ape.pcoa$vectors[,1],unifracWeightsFiltered.ape.pcoa$vectors[,2], col=groups,main="pcoa from qiime unifrac distances",xlab=paste("First Component", unifracWeightsFiltered.pc1.varEx,"variance explained"),ylab=paste("Second Component", unifracWeightsFiltered.pc2.varEx,"variance explained"))
-
 legend(-0.6,0.4,levels(groups),col=palette(),pch=1)
 
-
+#match qiime pcoa vectors with metadata
 qiimePCOA <- read.table("./brazil_study_data/weighted_unifrac_pc_from_qiime.txt", header=T, sep="\t", row.names=1, comment.char="", check.names=FALSE)
 qiimePCOA <- qiimePCOA[-nrow(qiimePCOA)+1:-nrow(qiimePCOA),]
 indicies <- match(rownames(qiimePCOA),rownames(MyMeta))
@@ -153,15 +183,13 @@ indicies <- indicies[!is.na(indicies)]
 groups <- MyMeta[indicies,]$n_status
 qiimePCOA <- qiimePCOA[match(rownames(MyMeta[indicies,]),rownames(qiimePCOA)),]
 
-
+#calculate proportion of variance explained
 qiimePCOA.varExplained <- sum(apply(qiimePCOA,2,function(x) sd(x)*sd(x)))
-
 qiimePCOA.pc1.varEx <- sd(qiimePCOA[,1])*sd(qiimePCOA[,1])/qiimePCOA.varExplained
 qiimePCOA.pc2.varEx <- sd(qiimePCOA[,2])*sd(qiimePCOA[,2])/qiimePCOA.varExplained
 
-
+#plot qiime pecoa vectors with legend
 plot(qiimePCOA[,1],qiimePCOA[,2], col=groups,main="qiime pcoa",xlab=paste("First Component", qiimePCOA.pc1.varEx,"variance explained"),ylab=paste("Second Component", qiimePCOA.pc2.varEx,"variance explained"))
-
 legend(0.2,0.3,levels(groups),col=palette(),pch=1)
 
 
