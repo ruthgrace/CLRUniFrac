@@ -4,10 +4,10 @@ library(ape)
 library(phangorn)
 
 #I hacked the GUniFrac script to use CLR weighting instead of proportional abundance rating
-source("../CLRUniFrac.R")
+source("../../CLRUniFrac.R")
 
 #this GUniFrac script was ripped straight from the GUniFrac package, with no changes.
-source("../GUniFrac.R")
+source("../../GUniFrac.R")
 
 brazil.otu.tab <- read.table("./brazil_study_data/td_OTU_tag_mapped_RDPlineage_blastcorrected_vvcfilter_tempgenera.txt", header=T, sep="\t", row.names=1, comment.char="", check.names=FALSE)
 taxonomy <- brazil.otu.tab$taxonomy
@@ -60,7 +60,7 @@ gUnifrac.pc2.varEx <- sd(gUnifrac.pca$vector[,2])*sd(gUnifrac.pca$vector[,2])/gU
 
 # test overlap & read count correlations
 
-source("metrics.r")
+source("../metrics.r")
 
 # overlap <- getOverlap(MyOTU)
 # avg <- averageReadCount(MyOTU)
