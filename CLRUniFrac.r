@@ -24,7 +24,7 @@ require(ade4)
 require(ape)
 require(vegan)
 
-CorrectCLRUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
+CLRUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
 	# Calculate Generalized UniFrac distances. Unweighted and 
 	# Variance-adjusted UniFrac distances will also be returned.
 	#	

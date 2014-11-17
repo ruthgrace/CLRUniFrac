@@ -27,7 +27,7 @@ brazil.otu.tab <- brazil.otu.tab[otu_indicies,]
 MyMetaOrdered <- MyMeta[match(rownames(brazil.otu.tab),rownames(MyMeta)),]
 
 
-ruthClrUnifrac <- CorrectCLRUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
+ruthClrUnifrac <- CLRUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
 gUnifrac <- GUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
 
 groups <- MyMetaOrdered$n_status #levels bv, i, n
