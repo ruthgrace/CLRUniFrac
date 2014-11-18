@@ -101,7 +101,7 @@ originalPalette <- palette()
 
 
 #save to pdf
-pdf("hmp_mouth_comparison_pcoa.pdf")
+pdf("hmp_mouth_comparison_pcoa_no_overlap.pdf")
 
 #plot overlap vs clrunifrac distance
 plot(clrUnifrac.vector,overlap.vector,main="clr combination weights vs overlap")
@@ -143,10 +143,10 @@ palette(colors)
 
 #plot pcoa plots with legend
 plot(clrUnifrac.pcoa$vectors[,1],clrUnifrac.pcoa$vectors[,2], type="p",col=groups,main="clr combination weights",xlab=paste("First Component", clrUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", clrUnifrac.pc2.varEx,"variance explained"),pch=19)
-legend(0.6,0.5,levels(groups),col=colors,pch=1)
+legend(0.6,0.5,levels(groups),col=colors,pch=19)
 
 plot(gUnifrac.pcoa$vectors[,1],gUnifrac.pcoa$vectors[,2], col=groups,main="gunifrac",xlab=paste("First Component", gUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", gUnifrac.pc2.varEx,"variance explained"),pch=19)
-legend(0.2,0.45,levels(groups),col=colors,pch=1)
+legend(0.2,0.45,levels(groups),col=colors,pch=19)
 
 dev.off()
 
