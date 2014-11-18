@@ -2,6 +2,9 @@
 library(ape)
 library(phangorn)
 
+
+
+
 mouth.otu <- read.table("hmp_mouth_data.txt",sep="\t",header=TRUE,row.names=1)
 
 groups <- as.factor(c(rep("bm",20),rep("td",20),rep("akg",20),rep("hp",20),rep("s",20)))
@@ -101,7 +104,7 @@ originalPalette <- palette()
 
 
 #save to pdf
-pdf("hmp_mouth_comparison_pcoa_no_overlap.pdf")
+pdf("hmp_mouth_comparison_pcoa.pdf")
 
 #plot overlap vs clrunifrac distance
 plot(clrUnifrac.vector,overlap.vector,main="clr combination weights vs overlap")
