@@ -26,6 +26,7 @@ mouth.tree$tip.label <- gsub("'","",mouth.tree$tip.label)
 
 source("../../CLRUniFrac.R")
 source("../../GUniFrac.R")
+source("../../CLRDirichletUniFrac.R")
 
 #format otu table for input into unifrac methods (rownames are samples, colnames are OTUs)
 mouth.otu <- t(mouth.otu)
@@ -40,22 +41,28 @@ mouth.otu <- mouth.otu[,taxaOrder]
 
 clrUnifrac <- CLRUniFrac(mouth.otu, mouth.tree, alpha = c(1))$unifrac[,,1]
 gUnifrac <- GUniFrac(mouth.otu, mouth.tree, alpha = c(1))$unifrac[,,1]
+clrDirichletUnifrac <- CLRDirichletUniFrac(mouth.otu, mouth.tree, alpha = c(1))$unifrac[,,1]
 
 #calculate principle coordinates of analysis
 clrUnifrac.pcoa <- pcoa(clrUnifrac)
 gUnifrac.pcoa <- pcoa(gUnifrac)
+clrDirichletUnifrac.pcoa <- pcoa(clrDirichletUnifrac)
 
 # calculate total variance explained
 clrUnifrac.varExplained <- sum(apply(clrUnifrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
 gUnifrac.varExplained <- sum(apply(gUnifrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
+clrDirichletUnifrac.varExplained <- sum(apply(clrDirichletUnifrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
 
 # calculate proportion of variance explained by first component
 clrUnifrac.pc1.varEx <- sd(clrUnifrac.pcoa$vector[,1])*sd(clrUnifrac.pcoa$vector[,1])/clrUnifrac.varExplained
+#calculate proportion of variance explained by second component
 clrUnifrac.pc2.varEx <- sd(clrUnifrac.pcoa$vector[,2])*sd(clrUnifrac.pcoa$vector[,2])/clrUnifrac.varExplained
 
-#calculate proportion of variance explained by second component
 gUnifrac.pc1.varEx <- sd(gUnifrac.pcoa$vector[,1])*sd(gUnifrac.pcoa$vector[,1])/gUnifrac.varExplained
 gUnifrac.pc2.varEx <- sd(gUnifrac.pcoa$vector[,2])*sd(gUnifrac.pcoa$vector[,2])/gUnifrac.varExplained
+
+clrDirichletUnifrac.pc1.varEx <- sd(clrDirichletUnifrac.pcoa$vector[,1])*sd(clrDirichletUnifrac.pcoa$vector[,1])/clrDirichletUnifrac.varExplained
+clrDirichletUnifrac.pc2.varEx <- sd(clrDirichletUnifrac.pcoa$vector[,2])*sd(clrDirichletUnifrac.pcoa$vector[,2])/clrDirichletUnifrac.varExplained
 
 #get otu proportions for barplot
 mouth.prop <- t(apply(mouth.otu,1,function(x) x/sum(x)))
@@ -63,11 +70,12 @@ mouth.prop <- t(apply(mouth.otu,1,function(x) x/sum(x)))
 #convert to dist structure
 clrUnifrac.dist <- as.dist(clrUnifrac)
 gUnifrac.dist <- as.dist(gUnifrac)
+clrDirichletUnifrac.dist <- as.dist(clrDirichletUnifrac)
 
 #"average" is most similar to UPGMA, apparently
 clrUnifrac.dendo <- hclust(clrUnifrac.dist, method="average")
 gUnifrac.dendo <- hclust(gUnifrac.dist, method="average")
-
+clrDirichletUnifrac.dendo <- hclust(clrDirichletUnifrac.dist, method="average")
 
 
 # test overlap & read count correlations
@@ -84,14 +92,17 @@ avg.vector <- unlist(avg[lower.tri(avg,diag=TRUE)])
 #put distance matrices into single dimensional vectors for plotting
 clrUnifrac.vector <- unlist(clrUnifrac[lower.tri(clrUnifrac,diag=TRUE)])
 gUnifrac.vector <- unlist(gUnifrac[lower.tri(gUnifrac,diag=TRUE)])
+clrDirichletUnifrac.vector <- unlist(clrDirichletUnifrac[lower.tri(clrDirichletUnifrac,diag=TRUE)])
 
 #convert to dist structure
 clrUnifrac.dist <- as.dist(clrUnifrac)
 gUnifrac.dist <- as.dist(gUnifrac)
+clrDirichletUnifrac.dist <- as.dist(clrDirichletUnifrac)
 
 #"average" is most similar to UPGMA, apparently
 clrUnifrac.dendo <- hclust(clrUnifrac.dist, method="average")
 gUnifrac.dendo <- hclust(gUnifrac.dist, method="average")
+clrDirichletUnifrac.dendo <- hclust(clrDirichletUnifrac.dist, method="average")
 
 
 
@@ -115,9 +126,19 @@ lines(lowess(clrUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y
 plot(gUnifrac.vector,overlap.vector,main="gunifrac vs overlap")
 lines(lowess(gUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
 
+#repeat for clr dirichlet
+plot(clrDirichletUnifrac.vector,overlap.vector,main="clr dirichlet vs overlap")
+lines(lowess(clrDirichletUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
+
 #plot number of reads vs unifrac distances (checking for read count bias)
 plot(clrUnifrac.vector,avg.vector,main="clr combination weights vs avg")
+lines(lowess(clrUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
+
 plot(gUnifrac.vector,avg.vector,main="gunifrac vs avg")
+lines(lowess(gUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
+
+plot(clrDirichletUnifrac.vector,avg.vector,main="clr dirichlet vs avg")
+lines(lowess(clrDirichletUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
 
 
 #plot dendogram with bar plots
@@ -130,10 +151,13 @@ plot(clrUnifrac.dendo, axes=F, ylab=NULL, ann=F)
 #order the barplot 
 barplot(t(mouth.prop[clrUnifrac.dendo$order,]), space=0,col=colors, las=2)
 
-par(mfrow=c(2,1), mar=c(1, 3, 2, 1) + 0.1)
 plot(gUnifrac.dendo, axes=F, ylab=NULL, ann=F)
 #order the barplot 
 barplot(t(mouth.prop[gUnifrac.dendo$order,]), space=0,col=colors, las=2)
+
+plot(clrDirichletUnifrac.dendo, axes=F, ylab=NULL, ann=F)
+#order the barplot 
+barplot(t(mouth.prop[clrDirichletUnifrac.dendo$order,]), space=0,col=colors, las=2)
 
 par(plotParameters)
 
@@ -149,6 +173,9 @@ plot(clrUnifrac.pcoa$vectors[,1],clrUnifrac.pcoa$vectors[,2], type="p",col=group
 legend(0.6,0.5,levels(groups),col=colors,pch=19)
 
 plot(gUnifrac.pcoa$vectors[,1],gUnifrac.pcoa$vectors[,2], col=groups,main="gunifrac",xlab=paste("First Component", gUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", gUnifrac.pc2.varEx,"variance explained"),pch=19)
+legend(0.2,0.45,levels(groups),col=colors,pch=19)
+
+plot(clrDirichletUnifrac.pcoa$vectors[,1],clrDirichletUnifrac.pcoa$vectors[,2], col=groups,main="clr dirichlet",xlab=paste("First Component", clrDirichletUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", clrDirichletUnifrac.pc2.varEx,"variance explained"),pch=19)
 legend(0.2,0.45,levels(groups),col=colors,pch=19)
 
 dev.off()

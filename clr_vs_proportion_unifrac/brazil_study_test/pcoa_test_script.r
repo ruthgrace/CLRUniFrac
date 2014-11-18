@@ -9,6 +9,9 @@ plotParameters <- par()
 #I hacked the GUniFrac script to use CLR weighting instead of proportional abundance rating
 source("../../CLRUniFrac.R")
 
+#I hacked the GUniFrac script to use CLR weighting instead of proportional abundance rating
+source("../../CLRDirichletUniFrac.R")
+
 #this GUniFrac script was ripped straight from the GUniFrac package, with no changes.
 source("../../GUniFrac.R")
 
@@ -41,6 +44,7 @@ MyMetaOrdered <- MyMeta[match(rownames(brazil.otu.tab),rownames(MyMeta)),]
 #run CLRUniFrac and GUniFrac for comparison, puts distance matrix in ruthClrUnifrac and gUnifrac
 ruthClrUnifrac <- CLRUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
 gUnifrac <- GUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
+clrDirichletUniFrac <- CLRDirichletUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
 
 #conditions (bv - bacterial vaginosis as scored by nugent/amsel, i - intermediate, n - normal/healthy)
 groups <- MyMetaOrdered$n_status #levels bv, i, n
@@ -77,18 +81,23 @@ levels(taxonomyGroups) <- newLevels
 # caculate pcoa vectors
 ruthClrUnifrac.pcoa <- pcoa(ruthClrUnifrac)
 gUnifrac.pcoa <- pcoa(gUnifrac)
+clrDirichletUniFrac.pcoa <- pcoa(clrDirichletUniFrac)
 
 # calculate total variance explained
 ruthClrUnifrac.varExplained <- sum(apply(ruthClrUnifrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
 gUnifrac.varExplained <- sum(apply(gUnifrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
+clrDirichletUniFrac.varExplained <- sum(apply(clrDirichletUniFrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
 
 # calculate proportion of variance explained by first component
 ruthClrUnifrac.pc1.varEx <- sd(ruthClrUnifrac.pcoa$vector[,1])*sd(ruthClrUnifrac.pcoa$vector[,1])/ruthClrUnifrac.varExplained
+#calculate proportion of variance explained by second component
 ruthClrUnifrac.pc2.varEx <- sd(ruthClrUnifrac.pcoa$vector[,2])*sd(ruthClrUnifrac.pcoa$vector[,2])/ruthClrUnifrac.varExplained
 
-#calculate proportion of variance explained by second component
 gUnifrac.pc1.varEx <- sd(gUnifrac.pcoa$vector[,1])*sd(gUnifrac.pcoa$vector[,1])/gUnifrac.varExplained
 gUnifrac.pc2.varEx <- sd(gUnifrac.pcoa$vector[,2])*sd(gUnifrac.pcoa$vector[,2])/gUnifrac.varExplained
+
+clrDirichletUniFrac.pc1.varEx <- sd(clrDirichletUniFrac.pcoa$vector[,1])*sd(clrDirichletUniFrac.pcoa$vector[,1])/clrDirichletUniFrac.varExplained
+clrDirichletUniFrac.pc2.varEx <- sd(clrDirichletUniFrac.pcoa$vector[,2])*sd(clrDirichletUniFrac.pcoa$vector[,2])/clrDirichletUniFrac.varExplained
 
 
 # test overlap & read count correlations
@@ -105,14 +114,17 @@ avg.vector <- unlist(avg[lower.tri(avg,diag=TRUE)])
 #put distance matrices into single dimensional vectors for plotting
 ruthClrUnifrac.vector <- unlist(ruthClrUnifrac[lower.tri(ruthClrUnifrac,diag=TRUE)])
 gUnifrac.vector <- unlist(gUnifrac[lower.tri(gUnifrac,diag=TRUE)])
+clrDirichletUniFrac.vector <- unlist(clrDirichletUniFrac[lower.tri(clrDirichletUniFrac,diag=TRUE)])
 
 #convert to dist structure
 ruthClrUnifrac.dist <- as.dist(ruthClrUnifrac)
 gUnifrac.dist <- as.dist(gUnifrac)
+clrDirichletUniFrac.dist <- as.dist(clrDirichletUniFrac)
 
 #"average" is most similar to UPGMA, apparently
 ruthClrUnifrac.dendo <- hclust(ruthClrUnifrac.dist, method="average")
 gUnifrac.dendo <- hclust(gUnifrac.dist, method="average")
+clrDirichletUniFrac.dendo <- hclust(clrDirichletUniFrac.dist, method="average")
 
 #get otu proportions for barplot
 brazil.prop <- t(apply(brazil.otu.tab,1,function(x) x/sum(x)))
@@ -134,6 +146,11 @@ par(mfrow=c(2,1), mar=c(1, 3, 2, 1) + 0.1)
 plot(gUnifrac.dendo, axes=F, ylab=NULL, ann=F)
 #order the barplot 
 barplot(t(brazil.prop[gUnifrac.dendo$order,]), space=0,col=colors, las=2)
+
+par(mfrow=c(2,1), mar=c(1, 3, 2, 1) + 0.1)
+plot(clrDirichletUniFrac.dendo, axes=F, ylab=NULL, ann=F)
+#order the barplot 
+barplot(t(brazil.prop[clrDirichletUniFrac.dendo$order,]), space=0,col=colors, las=2)
 
 par(plotParameters)
 
@@ -160,15 +177,27 @@ lines(lowess(ruthClrUnifrac.vector,overlap.vector), col="yellow") # lowess line 
 plot(gUnifrac.vector,overlap.vector,main="gunifrac vs overlap")
 lines(lowess(gUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
 
+#repeat for clr dirichlet unifrac
+plot(clrDirichletUniFrac.vector,overlap.vector,main="clr dirichlet vs overlap")
+lines(lowess(clrDirichletUniFrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
+
+
 #plot number of reads vs unifrac distances (checking for read count bias)
 plot(ruthClrUnifrac.vector,avg.vector,main="clr combination weights vs avg")
+lines(lowess(ruthClrUnifrac.vector,avg.vector), col="yellow") # lowess line (x,y)
 plot(gUnifrac.vector,avg.vector,main="gunifrac vs avg")
+lines(lowess(gUnifrac.vector,avg.vector), col="yellow") # lowess line (x,y)
+plot(clrDirichletUniFrac.vector,avg.vector,main="clr dirichlet vs avg")
+lines(lowess(clrDirichletUniFrac.vector,avg.vector), col="yellow") # lowess line (x,y)
 
 #plot pcoa plots with legend
 plot(ruthClrUnifrac.pcoa$vectors[,1],ruthClrUnifrac.pcoa$vectors[,2], type="p",col=groups,main="clr combination weights",xlab=paste("First Component", ruthClrUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", ruthClrUnifrac.pc2.varEx,"variance explained"))
 legend(0.5,1.5,levels(taxonomyGroups),col=palette(),pch=1)
 
 plot(gUnifrac.pcoa$vectors[,1],gUnifrac.pcoa$vectors[,2], col=groups,main="gunifrac",xlab=paste("First Component", gUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", gUnifrac.pc2.varEx,"variance explained"))
+legend(0.1,0.3,levels(taxonomyGroups),col=palette(),pch=1)
+
+plot(clrDirichletUniFrac.pcoa$vectors[,1],clrDirichletUniFrac.pcoa$vectors[,2], col=groups,main="clr dirichlet unifrac",xlab=paste("First Component", clrDirichletUniFrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", clrDirichletUniFrac.pc2.varEx,"variance explained"))
 legend(0.1,0.3,levels(taxonomyGroups),col=palette(),pch=1)
 
 #change color palette for qiime output data (no otu count information for dominant taxa)
