@@ -96,21 +96,33 @@ avg.vector <- unlist(avg[lower.tri(avg,diag=TRUE)])
 ruthClrUnifrac.vector <- unlist(ruthClrUnifrac[lower.tri(ruthClrUnifrac,diag=TRUE)])
 gUnifrac.vector <- unlist(gUnifrac[lower.tri(gUnifrac,diag=TRUE)])
 
+#convert to dist structure
+ruthClrUnifrac.dist <- as.dist(ruthClrUnifrac)
+gUnifrac.dist <- as.dist(gUnifrac)
+
+#"average" is most similar to UPGMA, apparently
+ruthClrUnifrac.dendo <- hclust(ruthClrUnifrac.dist, method="average")
+gUnifrac.dendo <- hclust(gUnifrac.dist, method="average")
+
+#get otu proportions for barplot
+brazil.prop <- t(apply(brazil.otu.tab,1,function(x) x/sum(x)))
+
+
 #save plots as PDF
 pdf("test_plots_with_brazil_study_data.pdf")
 
+#plot dendogram with bar plots -- NEED TO FIX COLORS
+palette("default")
+#GG legacy code. Fix size, margins, position
+par(mfrow=c(2,1), mar=c(1, 3, 2, 1) + 0.1)
+plot(ruthClrUnifrac.dendo, axes=F, ylab=NULL, ann=F)
+#order the barplot 
+barplot(t(brazil.prop[ruthClrUnifrac.dendo$order,]), space=0, las=2)
 
-
-
-
-
-
-
-
-
-
-
-
+par(mfrow=c(2,1), mar=c(1, 3, 2, 1) + 0.1)
+plot(gUnifrac.dendo, axes=F, ylab=NULL, ann=F)
+#order the barplot 
+barplot(t(brazil.prop[gUnifrac.dendo$order,]), space=0, las=2)
 
 
 
