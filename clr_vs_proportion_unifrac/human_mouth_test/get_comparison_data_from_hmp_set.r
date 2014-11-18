@@ -5,8 +5,6 @@ hmpMetadata <- "../../../../fodor/v35_map_uniquebyPSN.txt"
 id <- read.table(hmpMetadata, header=TRUE, sep="\t", row.names=1)
 otu <- t( read.table(hmpData, header=T, sep="\t", row.names=1, check.names=FALSE) )
 
-rownames(otu) <- sub("^X", "", rownames(otu))
-
 # BODY SITES
 #  [1] "Anterior_nares"               "Attached_Keratinized_gingiva"
 #  [3] "Buccal_mucosa"                "Hard_palate"                 
@@ -40,6 +38,8 @@ akg.otu <- site <- otu[rownames(otu) %in% akg.id,]
 hp.otu <- site <- otu[rownames(otu) %in% hp.id,]
 s.otu <- site <- otu[rownames(otu) %in% s.id,]
 
+otuIDs <- colnames(bm.otu)
+
 bm.otu <- apply(bm.otu, 1, function(x){as.numeric(x)})
 td.otu <- apply(td.otu, 1, function(x){as.numeric(x)})
 akg.otu <- apply(akg.otu, 1, function(x){as.numeric(x)})
@@ -58,7 +58,7 @@ s.rand <- s.otu[,as.integer(sample(seq(1,length(colnames(s.otu)),1),20,replace=F
 
 data <- data.frame(bm.rand,td.rand,akg.rand,hp.rand,s.rand)
 colnames(data) <- sub("^X", "", colnames(data))
-
+rownames(data) <- otuIDs
 #make condition vector
 
 groups <- as.factor(c(rep("bm",20),rep("td",20),rep("akg",20),rep("hp",20),rep("s",20)))
