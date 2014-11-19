@@ -132,13 +132,13 @@ lines(lowess(clrDirichletUnifrac.vector,overlap.vector), col="yellow") # lowess 
 
 #plot number of reads vs unifrac distances (checking for read count bias)
 plot(clrUnifrac.vector,avg.vector,main="clr combination weights vs avg")
-lines(lowess(clrUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
+lines(lowess(clrUnifrac.vector,avg.vector), col="yellow") # lowess line (x,y)
 
 plot(gUnifrac.vector,avg.vector,main="gunifrac vs avg")
-lines(lowess(gUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
+lines(lowess(gUnifrac.vector,avg.vector), col="yellow") # lowess line (x,y)
 
 plot(clrDirichletUnifrac.vector,avg.vector,main="clr dirichlet vs avg")
-lines(lowess(clrDirichletUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
+lines(lowess(clrDirichletUnifrac.vector,avg.vector), col="yellow") # lowess line (x,y)
 
 
 #plot dendogram with bar plots
