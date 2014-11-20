@@ -27,19 +27,21 @@ require(vegan)
 
 
 #dirichlet method - gets dirichlet distribution of reads per OTU, returns median
-rdirichlet <- function (n, alpha)
+rdirichlet <- function (alpha)
 #ISALIAS ddirichlet
 #--------------------------------------------
 {
-  if(length(n) > 1) n <- length(n)
-  if(length(n) == 0 || as.integer(n) == 0) return(numeric(0))
-  n <- as.integer(n)
-  if(n < 0) stop("integer(n) can not be negative in rtriang")
+	#128 replicates (median converges at about 64 replicates)
+	n <- 128
+	if(length(n) > 1) n <- length(n)
+	if(length(n) == 0 || as.integer(n) == 0) return(numeric(0))
+	n <- as.integer(n)
+	if(n < 0) stop("integer(n) can not be negative in rtriang")
 
-  if(is.vector(alpha)) alpha <- t(alpha)
-  l <- dim(alpha)[2]
-  x <- matrix(rgamma(l * n, t(alpha)), ncol = l, byrow=TRUE)  # Gere le recycling
-  return(x / rowSums(x))
+	if(is.vector(alpha)) alpha <- t(alpha)
+	l <- dim(alpha)[2]
+	x <- matrix(rgamma(l * n, t(alpha)), ncol = l, byrow=TRUE)  # Gere le recycling
+	return(x / rowSums(x))
 }
 
 
@@ -72,7 +74,7 @@ CLRDirichletUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
 	numOTUs <- rowSums(otu.tab!=0) # how many in each column is not zero
 
 	#calculate proportions using the Dirichlet
-	otu.tab.D <- t(apply(t(otu.tab), 2, function(x){rdirichlet(1,x)}))
+	otu.tab.D <- t(apply(t(otu.tab), 2, function(x){rdirichlet(x)}))
 
 	otu.tab.clr <- apply(otu.tab.D, 1, function(x){log2(x) - mean(log2(x))})
 	otu.tab.clr <- t(otu.tab.clr)

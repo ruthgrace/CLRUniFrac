@@ -67,6 +67,9 @@ clrDirichletUnifrac.pc2.varEx <- sd(clrDirichletUnifrac.pcoa$vector[,2])*sd(clrD
 #get otu proportions for barplot
 mouth.prop <- t(apply(mouth.otu,1,function(x) x/sum(x)))
 
+#get otu total read counts
+mouth.sum <- apply(mouth.otu,1,sum)
+
 #convert to dist structure
 clrUnifrac.dist <- as.dist(clrUnifrac)
 gUnifrac.dist <- as.dist(gUnifrac)
@@ -177,6 +180,19 @@ legend(0.2,0.45,levels(groups),col=colors,pch=19)
 
 plot(clrDirichletUnifrac.pcoa$vectors[,1],clrDirichletUnifrac.pcoa$vectors[,2], col=groups,main="clr dirichlet",xlab=paste("First Component", clrDirichletUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", clrDirichletUnifrac.pc2.varEx,"variance explained"),pch=19)
 legend(0.2,0.45,levels(groups),col=colors,pch=19)
+
+
+#plot pcoa first component vs. read count
+plot(clrUnifrac.pcoa$vectors[,1],mouth.sum,main="clr combination weights vs avg")
+lines(lowess(clrUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (x,y)
+
+plot(gUnifrac.pcoa$vectors[,1],mouth.sum,main="gunifrac vs avg")
+lines(lowess(gUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (x,y)
+
+plot(clrDirichletUnifrac.pcoa$vectors[,1],mouth.sum,main="clr dirichlet vs avg")
+lines(lowess(clrDirichletUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (x,y)
+
+
 
 dev.off()
 
