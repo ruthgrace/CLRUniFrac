@@ -103,7 +103,8 @@ clrDirichletUniFrac.pc2.varEx <- sd(clrDirichletUniFrac.pcoa$vector[,2])*sd(clrD
 # test overlap & read count correlations
 source("../metrics.r")
 
-overlap <- getOverlap(brazil.otu.tab)
+#overlap <- getOverlap(brazil.otu.tab)
+overlap <- vegdist(brazil.otu.tab,method="bray")
 avg <- averageReadCount(brazil.otu.tab)
 
 
@@ -243,6 +244,17 @@ qiimePCOA.pc2.varEx <- sd(qiimePCOA[,2])*sd(qiimePCOA[,2])/qiimePCOA.varExplaine
 #plot qiime pecoa vectors with legend
 plot(qiimePCOA[,1],qiimePCOA[,2], col=groups,main="qiime pcoa",xlab=paste("First Component", qiimePCOA.pc1.varEx,"variance explained"),ylab=paste("Second Component", qiimePCOA.pc2.varEx,"variance explained"))
 legend(0.2,0.3,levels(groups),col=palette(),pch=1)
+
+
+#plot pcoa first component vs. read count
+plot(ruthClrUnifrac.pcoa$vectors[,1],otuSum,main="clr combination weights vs avg")
+lines(lowess(ruthClrUnifrac.pcoa$vectors[,1],otuSum), col="yellow") # lowess line (x,y)
+
+plot(gUnifrac.pcoa$vectors[,1],otuSum,main="gunifrac vs avg")
+lines(lowess(gUnifrac.pcoa$vectors[,1],otuSum), col="yellow") # lowess line (x,y)
+
+plot(clrDirichletUniFrac.pcoa$vectors[,1],otuSum,main="clr dirichlet vs avg")
+lines(lowess(clrDirichletUniFrac.pcoa$vectors[,1],otuSum), col="yellow") # lowess line (x,y)
 
 
 dev.off()

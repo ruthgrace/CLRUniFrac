@@ -1,10 +1,13 @@
 #GETTING THE DATA FROM Human Microbiome Project OTU table
+library(phangorn)
 
 hmpData <- "../../../../fodor/otu_table_psn_v35.txt"
 hmpMetadata <- "../../../../fodor/v35_map_uniquebyPSN.txt"
+treeFile <- "../../../../fodor/rep_set_v35.tre")
+
 id <- read.table(hmpMetadata, header=TRUE, sep="\t", row.names=1)
 otu <- t( read.table(hmpData, header=T, sep="\t", row.names=1, check.names=FALSE) )
-
+tree <- read.tree(treeFile)
 # BODY SITES
 #  [1] "Anterior_nares"               "Attached_Keratinized_gingiva"
 #  [3] "Buccal_mucosa"                "Hard_palate"                 
@@ -46,6 +49,19 @@ akg.otu <- apply(akg.otu, 1, function(x){as.numeric(x)})
 hp.otu <- apply(hp.otu, 1, function(x){as.numeric(x)})
 s.otu <- apply(s.otu, 1, function(x){as.numeric(x)})
 
+# remove all samples with read count lower than 10,000
+bm.sum <- apply(bm.otu,2,sum)
+td.sum <- apply(td.otu,2,sum)
+akg.sum <- apply(akg.otu,2,sum)
+hp.sum <- apply(hp.otu,2,sum)
+s.sum <- apply(s.otu,2,sum)
+
+bm.otu <- bm.otu[,which(bm.sum>10000)]
+td.otu <- td.otu[,which(td.sum>10000)]
+akg.otu <- akg.otu[,which(akg.sum>10000)]
+hp.otu <- hp.otu[,which(hp.sum>10000)]
+s.otu <- s.otu[,which(s.sum>10000)]
+
 #pick 20 random samples from each category
 
 bm.rand <- bm.otu[,as.integer(sample(seq(1,length(colnames(bm.otu)),1),20,replace=FALSE))]
@@ -69,12 +85,18 @@ data.sum <- apply(data,1,sum)
 data.0 <- data[data.sum > 0,]
 data <- data.0
 
+# get rid of extra OTUs in tree
+tree$tip.label <- gsub("'","",tree$tip.label)
+absent <- tree$tip.label[!(tree$tip.label %in% colnames(data))]
+if (length(absent) != 0) {
+		tree <- drop.tip(tree, absent)
+}
+write.tree(tree,file="rep_set_v35_subtree.tre")
+
 #make sample names that contain condition
 
 colnames(data) <- paste(groups,colnames(data),sep="_")
 
 #write otu counts into table
-
 write.table(data,file="hmp_mouth_data.txt",sep="\t",quote=FALSE)
-
 # read in with read.table("hmp_mouth_data.txt",sep="\t",header=TRUE,row.names=1)

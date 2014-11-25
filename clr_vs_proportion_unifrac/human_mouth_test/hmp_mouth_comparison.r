@@ -34,6 +34,13 @@ mouth.otu <- t(mouth.otu)
 #get rid of the three OTUs that aren't in the tree (only 12 reads discarded in total)
 mouth.otu <- mouth.otu[,which(colnames(mouth.otu) %in% mouth.tree$tip.label)]
 
+#RAREFY
+mouth.original <- mouth.otu
+# rarefiedData <- Rarefy(mouth.otu,depth=2000)
+# mouth.otu <- rarefiedData[[1]]
+# mouth.original <- mouth.original[match(rownames(mouth.otu),rownames(mouth.original)),]
+
+
 #order otus by abundance (least to most)
 taxaOrder <- rev(order(apply(mouth.otu,2,sum)))
 mouth.otu <- mouth.otu[,taxaOrder]
@@ -68,7 +75,7 @@ clrDirichletUnifrac.pc2.varEx <- sd(clrDirichletUnifrac.pcoa$vector[,2])*sd(clrD
 mouth.prop <- t(apply(mouth.otu,1,function(x) x/sum(x)))
 
 #get otu total read counts
-mouth.sum <- apply(mouth.otu,1,sum)
+mouth.sum <- apply(mouth.original,1,sum)
 
 #convert to dist structure
 clrUnifrac.dist <- as.dist(clrUnifrac)
@@ -84,8 +91,9 @@ clrDirichletUnifrac.dendo <- hclust(clrDirichletUnifrac.dist, method="average")
 # test overlap & read count correlations
 source("../metrics.r")
 
-overlap <- getOverlap(mouth.otu)
-avg <- averageReadCount(mouth.otu)
+#overlap <- getOverlap(mouth.otu)
+overlap <- vegdist(mouth.original,method="bray")
+avg <- averageReadCount(mouth.original)
 
 
 #put metrics matricies into single dimensional vectors for plotting
