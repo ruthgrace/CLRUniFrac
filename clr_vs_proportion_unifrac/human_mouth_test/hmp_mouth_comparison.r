@@ -62,11 +62,13 @@ eUnifrac <- EntropyUniFrac(mouth.otu, mouth.tree, alpha = c(1))$unifrac[,,1]
 #calculate principle coordinates of analysis
 clrUnifrac.pcoa <- pcoa(clrUnifrac)
 gUnifrac.pcoa <- pcoa(gUnifrac)
+eUnifrac.pcoa <- pcoa(eUnifrac)
 #clrDirichletUnifrac.pcoa <- pcoa(clrDirichletUnifrac)
 
 # calculate total variance explained
 clrUnifrac.varExplained <- sum(apply(clrUnifrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
 gUnifrac.varExplained <- sum(apply(gUnifrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
+eUnifrac.varExplained <- sum(apply(eUnifrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
 #clrDirichletUnifrac.varExplained <- sum(apply(clrDirichletUnifrac.pcoa$vector,2,function(x) sd(x)*sd(x)))
 
 # calculate proportion of variance explained by first component
@@ -76,6 +78,9 @@ clrUnifrac.pc2.varEx <- sd(clrUnifrac.pcoa$vector[,2])*sd(clrUnifrac.pcoa$vector
 
 gUnifrac.pc1.varEx <- sd(gUnifrac.pcoa$vector[,1])*sd(gUnifrac.pcoa$vector[,1])/gUnifrac.varExplained
 gUnifrac.pc2.varEx <- sd(gUnifrac.pcoa$vector[,2])*sd(gUnifrac.pcoa$vector[,2])/gUnifrac.varExplained
+
+eUnifrac.pc1.varEx <- sd(eUnifrac.pcoa$vector[,1])*sd(eUnifrac.pcoa$vector[,1])/eUnifrac.varExplained
+eUnifrac.pc2.varEx <- sd(eUnifrac.pcoa$vector[,2])*sd(eUnifrac.pcoa$vector[,2])/eUnifrac.varExplained
 
 #clrDirichletUnifrac.pc1.varEx <- sd(clrDirichletUnifrac.pcoa$vector[,1])*sd(clrDirichletUnifrac.pcoa$vector[,1])/clrDirichletUnifrac.varExplained
 #clrDirichletUnifrac.pc2.varEx <- sd(clrDirichletUnifrac.pcoa$vector[,2])*sd(clrDirichletUnifrac.pcoa$vector[,2])/clrDirichletUnifrac.varExplained
@@ -89,11 +94,13 @@ mouth.sum <- apply(mouth.original,1,sum)
 #convert to dist structure
 clrUnifrac.dist <- as.dist(clrUnifrac)
 gUnifrac.dist <- as.dist(gUnifrac)
+eUnifrac.dist <- as.dist(eUnifrac)
 #clrDirichletUnifrac.dist <- as.dist(clrDirichletUnifrac)
 
 #"average" is most similar to UPGMA, apparently
 clrUnifrac.dendo <- hclust(clrUnifrac.dist, method="average")
 gUnifrac.dendo <- hclust(gUnifrac.dist, method="average")
+eUnifrac.dendo <- hclust(eUnifrac.dist, method="average")
 #clrDirichletUnifrac.dendo <- hclust(clrDirichletUnifrac.dist, method="average")
 
 
@@ -112,16 +119,19 @@ avg.vector <- unlist(avg[lower.tri(avg,diag=TRUE)])
 #put distance matrices into single dimensional vectors for plotting
 clrUnifrac.vector <- unlist(clrUnifrac[lower.tri(clrUnifrac,diag=TRUE)])
 gUnifrac.vector <- unlist(gUnifrac[lower.tri(gUnifrac,diag=TRUE)])
+eUnifrac.vector <- unlist(eUnifrac[lower.tri(eUnifrac,diag=TRUE)])
 #clrDirichletUnifrac.vector <- unlist(clrDirichletUnifrac[lower.tri(clrDirichletUnifrac,diag=TRUE)])
 
 #convert to dist structure
 clrUnifrac.dist <- as.dist(clrUnifrac)
 gUnifrac.dist <- as.dist(gUnifrac)
+eUnifrac.dist <- as.dist(eUnifrac)
 #clrDirichletUnifrac.dist <- as.dist(clrDirichletUnifrac)
 
 #"average" is most similar to UPGMA, apparently
 clrUnifrac.dendo <- hclust(clrUnifrac.dist, method="average")
 gUnifrac.dendo <- hclust(gUnifrac.dist, method="average")
+eUnifrac.dendo <- hclust(eUnifrac.dist, method="average")
 #clrDirichletUnifrac.dendo <- hclust(clrDirichletUnifrac.dist, method="average")
 
 
@@ -146,6 +156,9 @@ lines(lowess(clrUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y
 plot(gUnifrac.vector,overlap.vector,main="gunifrac vs overlap")
 lines(lowess(gUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
 
+plot(eUnifrac.vector,overlap.vector,main="eunifrac vs overlap")
+lines(lowess(eUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
+
 #repeat for clr dirichlet
 #plot(clrDirichletUnifrac.vector,overlap.vector,main="clr dirichlet vs overlap")
 #lines(lowess(clrDirichletUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
@@ -162,6 +175,11 @@ abline(fit <- lm(avg.vector ~ gUnifrac.vector),col="darkorchid4")
 print("clr vs overlap")
 print(summary(fit)$r.squared)
 #lines(lowess(gUnifrac.vector,avg.vector), col="darkorchid4") # lowess line (x,y)
+
+plot(eUnifrac.vector,avg.vector,main="Entropy weighted\nUniFrac vs. sequencing depth",xlab="UniFrac distance",ylab="Average Total Read Count",col="palegreen",cex.lab=1.4,cex.main=2)
+abline(fit <- lm(avg.vector ~ eUnifrac.vector),col="darkorchid4")
+print("clr vs overlap")
+print(summary(fit)$r.squared)
 
 #plot(clrDirichletUnifrac.vector,avg.vector,main="clr dirichlet vs avg")
 #lines(lowess(clrDirichletUnifrac.vector,avg.vector), col="yellow") # lowess line (x,y)
@@ -180,6 +198,10 @@ barplot(t(mouth.prop[clrUnifrac.dendo$order,]), space=0,col=colors, las=2)
 plot(gUnifrac.dendo, axes=F, ylab=NULL, ann=F)
 #order the barplot 
 barplot(t(mouth.prop[gUnifrac.dendo$order,]), space=0,col=colors, las=2)
+
+plot(eUnifrac.dendo, axes=F, ylab=NULL, ann=F)
+#order the barplot 
+barplot(t(mouth.prop[eUnifrac.dendo$order,]), space=0,col=colors, las=2)
 
 #plot(clrDirichletUnifrac.dendo, axes=F, ylab=NULL, ann=F)
 #order the barplot 
@@ -201,6 +223,9 @@ legend(1.0,0.3,levels(groups),col=colors,pch=19)
 plot(gUnifrac.pcoa$vectors[,1],gUnifrac.pcoa$vectors[,2], col=groups,main="Proportional abundance weighted UniFrac\npricipal coordinates analysis",xlab=paste("First Component", round(gUnifrac.pc1.varEx,digits=3),"variance explained"),ylab=paste("Second Component", round(gUnifrac.pc2.varEx,digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
 legend(0.4,0.2,levels(groups),col=colors,pch=19)
 
+plot(eUnifrac.pcoa$vectors[,1],eUnifrac.pcoa$vectors[,2], col=groups,main="Entropy weighted UniFrac\npricipal coordinates analysis",xlab=paste("First Component", round(eUnifrac.pc1.varEx,digits=3),"variance explained"),ylab=paste("Second Component", round(eUnifrac.pc2.varEx,digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
+legend(0.4,0.2,levels(groups),col=colors,pch=19)
+
 
 
 #plot(clrDirichletUnifrac.pcoa$vectors[,1],clrDirichletUnifrac.pcoa$vectors[,2], col=groups,main="clr dirichlet",xlab=paste("First Component", clrDirichletUnifrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", clrDirichletUnifrac.pc2.varEx,"variance explained"),pch=19)
@@ -213,6 +238,9 @@ lines(lowess(clrUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line
 
 plot(gUnifrac.pcoa$vectors[,1],mouth.sum,main="gunifrac vs avg")
 lines(lowess(gUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (x,y)
+
+plot(eUnifrac.pcoa$vectors[,1],mouth.sum,main="gunifrac vs avg")
+lines(lowess(eUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (x,y)
 
 #plot(clrDirichletUnifrac.pcoa$vectors[,1],mouth.sum,main="clr dirichlet vs avg")
 #lines(lowess(clrDirichletUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (x,y)
