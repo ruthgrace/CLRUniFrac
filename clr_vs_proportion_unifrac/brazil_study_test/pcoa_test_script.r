@@ -12,10 +12,13 @@ plotParameters <- par()
 source("../../CLRUniFrac.R")
 
 #I hacked the GUniFrac script to use CLR weighting instead of proportional abundance rating
-source("../../CLRDirichletUniFrac.R")
+#source("../../CLRDirichletUniFrac.R")
 
 #this GUniFrac script was ripped straight from the GUniFrac package, with no changes.
 source("../../GUniFrac.R")
+
+source("../../EntropyUniFrac.R")
+
 
 # read OTU table and format appropriately for input into UniFrac methods
 brazil.otu.tab <- read.table("./brazil_study_data/td_OTU_tag_mapped_RDPlineage_blastcorrected_vvcfilter_tempgenera.txt", header=T, sep="\t", row.names=1, comment.char="", check.names=FALSE)
@@ -145,26 +148,26 @@ brazil.prop <- t(apply(brazil.otu.tab,1,function(x) x/sum(x)))
 
 
 #save plots as PDF
-pdf("test_plots_with_brazil_study_data.pdf")
+pdf("test_plots_with_brazil_study_data_no_bar_plots.pdf")
 
 #plot dendogram with bar plots
 
 #GG legacy code. Fix size, margins, position
 par(mfrow=c(2,1), mar=c(1, 3, 2, 1) + 0.1,cex=0.3)
 
-plot(ruthClrUnifrac.dendo, axes=F, ylab=NULL, ann=F,hang=-1)
+# plot(ruthClrUnifrac.dendo, axes=F, ylab=NULL, ann=F,hang=-1)
 
-#order the barplot 
-colors <- c("steelblue3","skyblue1", "indianred1", "mediumpurple1", "olivedrab3", "pink", "#FFED6F", "mediumorchid3", "ivory2", "tan1", "aquamarine3", "#C0C0C0", "royalblue4", "mediumvioletred", "#999933", "#666699", "#CC9933", "#006666", "#3399FF", "#993300", "#CCCC99", "#666666", "#FFCC66", "#6699CC", "#663366", "#9999CC", "#CCCCCC", "#669999", "#CCCC66", "#CC6600", "bisque", "#9999FF", "#0066CC", "#99CCCC", "#999999", "#FFCC00", "#009999", "#FF9900", "#999966", "#66CCCC", "#339966", "#CCCC33", "#EDEDED")
-barplot(t(brazil.prop[ruthClrUnifrac.dendo$order,]), space=0,col=colors, las=2)
+# #order the barplot 
+# colors <- c("steelblue3","skyblue1", "indianred1", "mediumpurple1", "olivedrab3", "pink", "#FFED6F", "mediumorchid3", "ivory2", "tan1", "aquamarine3", "#C0C0C0", "royalblue4", "mediumvioletred", "#999933", "#666699", "#CC9933", "#006666", "#3399FF", "#993300", "#CCCC99", "#666666", "#FFCC66", "#6699CC", "#663366", "#9999CC", "#CCCCCC", "#669999", "#CCCC66", "#CC6600", "bisque", "#9999FF", "#0066CC", "#99CCCC", "#999999", "#FFCC00", "#009999", "#FF9900", "#999966", "#66CCCC", "#339966", "#CCCC33", "#EDEDED")
+# barplot(t(brazil.prop[ruthClrUnifrac.dendo$order,]), space=0,col=colors, las=2)
 
-plot(gUnifrac.dendo, axes=F, ylab=NULL, ann=F)
-#order the barplot 
-barplot(t(brazil.prop[gUnifrac.dendo$order,]), space=0,col=colors, las=2)
+# plot(gUnifrac.dendo, axes=F, ylab=NULL, ann=F)
+# #order the barplot 
+# barplot(t(brazil.prop[gUnifrac.dendo$order,]), space=0,col=colors, las=2)
 
-plot(eUnifrac.dendo, axes=F, ylab=NULL, ann=F)
-#order the barplot 
-barplot(t(brazil.prop[eUnifrac.dendo$order,]), space=0,col=colors, las=2)
+# plot(eUnifrac.dendo, axes=F, ylab=NULL, ann=F)
+# #order the barplot 
+# barplot(t(brazil.prop[eUnifrac.dendo$order,]), space=0,col=colors, las=2)
 
 #plot(clrDirichletUniFrac.dendo, axes=F, ylab=NULL, ann=F)
 #order the barplot 
@@ -227,7 +230,7 @@ abline(fit <- lm(avg.vector ~ gUnifrac.vector),col="darkorchid4")
 print("clr vs overlap")
 print(summary(fit)$r.squared)
 
-plot(eUnifrac.vector,avg.vector,main="Entropy weighted\nUniFrac vs. sequencing depth",col="palegreen",xlab="UniFrac distance",ylab="Average Total Read Count",cex.lab=1.4,cex.main=2)
+plot(eUnifrac.vector,avg.vector,main="Entropy weighted\nUniFrac vs. sequencing depth",col=rgb(.1,1,.1,0.1), pch=19,xlab="UniFrac distance",ylab="Average Total Read Count",cex.lab=1.4,cex.main=2)
 #lines(lowess(gUnifrac.vector,avg.vector), col="darkorchid4") # lowess line (x,y)
 abline(fit <- lm(avg.vector ~ eUnifrac.vector),col="darkorchid4")
 print("clr vs overlap")
@@ -249,6 +252,11 @@ legend(0.2,0.3,levels(taxonomyGroups),col=palette(),pch=19)
 
 #plot(clrDirichletUniFrac.pcoa$vectors[,1],clrDirichletUniFrac.pcoa$vectors[,2], col=groups,main="clr dirichlet unifrac",xlab=paste("First Component", clrDirichletUniFrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", clrDirichletUniFrac.pc2.varEx,"variance explained"))
 #legend(0.1,0.3,levels(taxonomyGroups),col=palette(),pch=1)
+
+
+plot(gUnifrac.vector,ruthClrUnifrac.vector,main="gunifrac vs clrunifrac")
+plot(gUnifrac.vector,eUnifrac.vector,main="gunifrac vs eunifrac")
+
 
 #change color palette for qiime output data (no otu count information for dominant taxa)
 # red for bacterial vaginosis, orange for intermediate, blue for normal/healthy

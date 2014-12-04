@@ -7,7 +7,7 @@ library(phangorn)
 #attempt at sparsity filter instead -- 30 counts minimum is what is stable
 
 
-mouth.otu <- read.table("hmp_mouth_data_high_read_count.txt",sep="\t",header=TRUE,row.names=1)
+mouth.otu <- read.table("hmp_mouth_data.txt",sep="\t",header=TRUE,row.names=1)
 
 groups <- as.factor(c(rep("buccal mucosa",20),rep("tongue dorsum",20),rep("attached keratinized gingiva",20),rep("hard palate",20),rep("saliva",20)))
 
@@ -135,8 +135,6 @@ eUnifrac.dendo <- hclust(eUnifrac.dist, method="average")
 #clrDirichletUnifrac.dendo <- hclust(clrDirichletUnifrac.dist, method="average")
 
 
-
-
 # get default par
 plotParameters <- par()
 
@@ -145,7 +143,7 @@ originalPalette <- palette()
 
 
 #save to pdf
-pdf("hmp_mouth_comparison_pcoa_high_read_count.pdf")
+pdf("hmp_mouth_comparison_pcoa_low_read_count_no_bar_plots.pdf")
 
 #plot overlap vs clrunifrac distance
 plot(clrUnifrac.vector,overlap.vector,main="clr combination weights vs overlap")
@@ -162,6 +160,7 @@ lines(lowess(eUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
 #repeat for clr dirichlet
 #plot(clrDirichletUnifrac.vector,overlap.vector,main="clr dirichlet vs overlap")
 #lines(lowess(clrDirichletUnifrac.vector,overlap.vector), col="yellow") # lowess line (x,y)
+
 
 #plot number of reads vs unifrac distances (checking for read count bias)
 plot(clrUnifrac.vector,avg.vector,main="CLR transform weighted\nUniFrac vs. sequencing depth",xlab="UniFrac distance",ylab="Average Total Read Count",col="palegreen",cex.lab=1.4,cex.main=2)
@@ -185,23 +184,28 @@ print(summary(fit)$r.squared)
 #lines(lowess(clrDirichletUnifrac.vector,avg.vector), col="yellow") # lowess line (x,y)
 
 
+plot(gUnifrac.vector,clrUnifrac.vector,main="gunifrac vs clrunifrac")
+plot(gUnifrac.vector,eUnifrac.vector,main="gunifrac vs eunifrac")
+
+
+
 #plot dendogram with bar plots
 colors <- c("steelblue3","skyblue1", "indianred1", "mediumpurple1", "olivedrab3", "pink", "#FFED6F", "mediumorchid3", "ivory2", "tan1", "aquamarine3", "#C0C0C0", "royalblue4", "mediumvioletred", "#999933", "#666699", "#CC9933", "#006666", "#3399FF", "#993300", "#CCCC99", "#666666", "#FFCC66", "#6699CC", "#663366", "#9999CC", "#CCCCCC", "#669999", "#CCCC66", "#CC6600", "bisque", "#9999FF", "#0066CC", "#99CCCC", "#999999", "#FFCC00", "#009999", "#FF9900", "#999966", "#66CCCC", "#339966", "#CCCC33", "#EDEDED")
 palette(colors)
 
-#GG legacy code. Fix size, margins, position
-par(mfrow=c(2,1), mar=c(1, 3, 2, 1) + 0.1)
-plot(clrUnifrac.dendo, axes=F, ylab=NULL, ann=F)
-#order the barplot 
-barplot(t(mouth.prop[clrUnifrac.dendo$order,]), space=0,col=colors, las=2)
+# #GG legacy code. Fix size, margins, position
+# par(mfrow=c(2,1), mar=c(1, 3, 2, 1) + 0.1)
+# plot(clrUnifrac.dendo, axes=F, ylab=NULL, ann=F)
+# #order the barplot 
+# barplot(t(mouth.prop[clrUnifrac.dendo$order,]), space=0,col=colors, las=2)
 
-plot(gUnifrac.dendo, axes=F, ylab=NULL, ann=F)
-#order the barplot 
-barplot(t(mouth.prop[gUnifrac.dendo$order,]), space=0,col=colors, las=2)
+# plot(gUnifrac.dendo, axes=F, ylab=NULL, ann=F)
+# #order the barplot 
+# barplot(t(mouth.prop[gUnifrac.dendo$order,]), space=0,col=colors, las=2)
 
-plot(eUnifrac.dendo, axes=F, ylab=NULL, ann=F)
-#order the barplot 
-barplot(t(mouth.prop[eUnifrac.dendo$order,]), space=0,col=colors, las=2)
+# plot(eUnifrac.dendo, axes=F, ylab=NULL, ann=F)
+# #order the barplot 
+# barplot(t(mouth.prop[eUnifrac.dendo$order,]), space=0,col=colors, las=2)
 
 #plot(clrDirichletUnifrac.dendo, axes=F, ylab=NULL, ann=F)
 #order the barplot 
@@ -233,13 +237,13 @@ legend(0.4,0.2,levels(groups),col=colors,pch=19)
 
 par(plotParameters)
 #plot pcoa first component vs. read count
-plot(clrUnifrac.pcoa$vectors[,1],mouth.sum,main="clr combination weights vs avg")
+plot(clrUnifrac.pcoa$vectors[,1],mouth.sum,main="clr combination weights vs first pcoa")
 lines(lowess(clrUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (x,y)
 
-plot(gUnifrac.pcoa$vectors[,1],mouth.sum,main="gunifrac vs avg")
+plot(gUnifrac.pcoa$vectors[,1],mouth.sum,main="gunifrac vs first pcoa")
 lines(lowess(gUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (x,y)
 
-plot(eUnifrac.pcoa$vectors[,1],mouth.sum,main="gunifrac vs avg")
+plot(eUnifrac.pcoa$vectors[,1],mouth.sum,main="eunifrac vs first pcoa")
 lines(lowess(eUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (x,y)
 
 #plot(clrDirichletUnifrac.pcoa$vectors[,1],mouth.sum,main="clr dirichlet vs avg")

@@ -23,7 +23,8 @@ require(ade4)
 require(ape)
 require(vegan)
 
-EntropyUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
+EntropyUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {	
+
 	# Calculate Generalized UniFrac distances. Unweighted and 
 	# Variance-adjusted UniFrac distances will also be returned.
 	#	
@@ -114,20 +115,17 @@ EntropyUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
 			br.len2 <- br.len[ind]			
 			mi <- cum.ct[ind, i] + cum.ct[ind, j]
 			mt <- row.sum[i] + row.sum[j]			
-			diff <- abs(cum1 - cum2) / (cum1 + cum2)		
-			
+			diff <- abs(cum1 - cum2) / (cum1 + cum2)					
 			# Generalized UniFrac distance
 			for(k in 1:length(alpha)){
 				w <- br.len2 * (cum1 + cum2)^alpha[k]
 				unifracs[i, j, k] <- unifracs[j, i, k] <- sum(diff * w) / sum(w)
 			}			
-			
 			#	Variance Adjusted UniFrac Distance
 			ind2 <- (mt != mi)
 			w <- br.len2 * (cum1 + cum2) / sqrt(mi * (mt - mi))
 			unifracs[i, j, (k + 2)] <- unifracs[j, i, (k + 2)] <- 
 					sum(diff[ind2] * w[ind2]) / sum(w[ind2])		
-			
 			#	Unweighted UniFrac Distance
 			cum1 <- (cum1 != 0)
 			cum2 <- (cum2 != 0)			
@@ -211,5 +209,6 @@ Rarefy <- function (otu.tab, depth = min(rowSums(otu.tab))){
 getCumulativeEntropy <- function(cumulativeTable) {
 	#formula is -p*log(p) where p is the proportion of the otu
 	cumulativeEntropy <- apply(cumulativeTable,1:2,function(x) -x*log2(x))
+	cumulativeEntropy[apply(cumulativeEntropy,1:2,is.nan)] <- 0
 	return(cumulativeEntropy)
 }
