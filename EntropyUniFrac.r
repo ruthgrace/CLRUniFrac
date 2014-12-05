@@ -23,7 +23,7 @@ require(ade4)
 require(ape)
 require(vegan)
 
-EntropyUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {	
+InformationUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {	
 
 	# Calculate Generalized UniFrac distances. Unweighted and 
 	# Variance-adjusted UniFrac distances will also be returned.

@@ -51,6 +51,30 @@ averageGeneric <- function(numSamples,totalReadCount) {
 	return(avgReadCount)
 }
 
+maxGeneric <- function(numSamples,totalReadCount) {
+	avgReadCount <- matrix(nrow=numSamples,ncol=numSamples)
+
+	for(i in 1:numSamples) {
+		for (j in i:numSamples) {
+			avgReadCount[i,j] <- max(c(totalReadCount[i],totalReadCount[j]))
+			avgReadCount[j,i] <- avgReadCount[i,j]
+		}
+	}
+	return(avgReadCount)
+}
+
+minGeneric <- function(numSamples,totalReadCount) {
+	avgReadCount <- matrix(nrow=numSamples,ncol=numSamples)
+
+	for(i in 1:numSamples) {
+		for (j in i:numSamples) {
+			avgReadCount[i,j] <- min(c(totalReadCount[i],totalReadCount[j]))
+			avgReadCount[j,i] <- avgReadCount[i,j]
+		}
+	}
+	return(avgReadCount)
+}
+
 printSeparation <- function(ruthClrUnifrac.pcoa,gUnifrac.pcoa,eUnifrac.pcoa,condition1,condition2,groups) {
 
 	print(paste("COMPARING",condition1,"and",condition2))
@@ -140,4 +164,64 @@ getShannonDiversityDiffMat <- function(otu) {
 getAvgShannonDiversity <- function(otu) {
 	diversityList <- diversity(otu)
 	return(averageGeneric(nrow(otu),diversityList))
+}
+
+getMinShannonDiversity <- function(otu) {
+	diversityList <- diversity(otu)
+	return(minGeneric(nrow(otu),diversityList))
+}
+
+getMaxShannonDiversity <- function(otu) {
+	diversityList <- diversity(otu)
+	return(maxGeneric(nrow(otu),diversityList))
+}
+
+getDataSetSep <- function(otu,groups,tree) {
+	#take in otu table, rows are samples, cols are OTUs
+	# return list of 1) unweighted UniFrac 2) weighted UniFrac 3) iUniFrac
+
+	unifrac <- GUniFrac(otu, brazil.tree, alpha = c(1))
+	uwUnifrac <- unifrac$unifrac[,,1]
+	wUnifrac <- unifrac$unifrac[,,3]
+	eUnifrac <- InformationUniFrac(otu, brazil.tree, alpha = c(1))$unifrac[,,1]
+
+	uwUnifrac.pcoa <- pcoa(uwUnifrac)
+	wUnifrac.pcoa <- pcoa(wUnifrac)
+	eUnifrac.pcoa <- pcoa(eUnifrac)
+
+	uwUnifrac.sep <- getPCoASep(uwUnifrac.pcoa)
+	wUnifrac.sep <- getPCoASep(wUnifrac.pcoa)
+	eUnifrac.sep <- getPCoASep(eUnifrac.pcoa)
+
+	returnList <- list()
+	returnList$uwUnifrac <- uwUnifrac.sep
+	returnList$wUnifrac <- wUnifrac.sep
+	returnList$eUnifrac <- eUnifrac.sep
+	return(returnList)
+}
+
+getPCoASep <- function(pcoa,groups) {
+	#given pcoa and metadata
+	# returns separations on axis 1, 1&2, 1&2&3
+	group1.1 <- pcoa$vector[which(groups==levels(groups)[1]),1]
+	group2.1 <- pcoa$vector[which(groups==levels(groups)[2]),1]
+	diff.1 <- abs(mean(group1.1) - mean(group2.1))/sd(pcoa$vector[,1])
+
+	group1.2 <- pcoa$vector[which(groups==levels(groups)[1]),2]
+	group2.2 <- pcoa$vector[which(groups==levels(groups)[2]),2]
+	diff.2 <- abs(mean(group1.1) - mean(group2.1))/sd(pcoa$vector[,2])
+
+	group1.3 <- pcoa$vector[which(groups==levels(groups)[1]),3]
+	group2.3 <- pcoa$vector[which(groups==levels(groups)[2]),3]
+	diff.3 <- abs(mean(group1.1) - mean(group2.1))/sd(pcoa$vector[,3])
+
+	diff.12 <- sqrt(diff.1^2 + diff.2^2)
+	diff.123 <- sqrt(diff.12^2 + diff.3^2)
+
+	returnList <- list()
+	returnList$separationOn1 <- diff.1
+	returnList$separationOn12 <- diff.12
+	returnList$separationOn123 <- diff.123
+
+	return(returnList)
 }

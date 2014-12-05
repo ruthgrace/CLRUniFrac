@@ -50,7 +50,7 @@ MyMetaOrdered <- MyMeta[match(rownames(brazil.otu.tab),rownames(MyMeta)),]
 #run CLRUniFrac and GUniFrac for comparison, puts distance matrix in ruthClrUnifrac and gUnifrac
 ruthClrUnifrac <- CLRUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
 gUnifrac <- GUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
-eUnifrac <- EntropyUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
+eUnifrac <- InformationUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
 #clrDirichletUniFrac <- CLRDirichletUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,1]
 
 #conditions (bv - bacterial vaginosis as scored by nugent/amsel, i - intermediate, n - normal/healthy)
@@ -140,6 +140,12 @@ diversity.vector <- unlist(diversity[lower.tri(diversity,diag=TRUE)])
 diversity.diff <- getShannonDiversityDiffMat(brazil.otu.tab)
 #put into single dimensional vector for plotting
 diversity.diff.vector <- unlist(diversity.diff[lower.tri(diversity.diff,diag=TRUE)])
+
+diversity.max <- getMaxShannonDiversity(brazil.otu.tab)
+diversity.max.vector <- unlist(diversity.max[lower.tri(diversity.max,diag=TRUE)])
+
+diversity.min <- getMinShannonDiversity(brazil.otu.tab)
+diversity.min.vector <- unlist(diversity.min[lower.tri(diversity.min,diag=TRUE)])
 
 
 #convert to dist structure
@@ -338,6 +344,14 @@ plot(eUnifrac.vector,diversity.diff.vector,main="eunifrac vs shannon diversity d
 plot(ruthClrUnifrac.vector,diversity.vector,main="clrunifrac vs shannon diversity",col=transparentdarkorchid, pch=19)
 plot(gUnifrac.vector,diversity.vector,main="gunifrac vs shannon diversity",col=transparentdarkorchid, pch=19)
 plot(eUnifrac.vector,diversity.vector,main="eunifrac vs shannon diversity",col=transparentdarkorchid, pch=19)
+
+plot(ruthClrUnifrac.vector,diversity.max.vector,main="clrunifrac vs max shannon diversity",col=transparentdarkorchid, pch=19)
+plot(gUnifrac.vector,diversity.max.vector,main="gunifrac vs max shannon diversity",col=transparentdarkorchid, pch=19)
+plot(eUnifrac.vector,diversity.max.vector,main="eunifrac vs max shannon diversity",col=transparentdarkorchid, pch=19)
+
+plot(ruthClrUnifrac.vector,diversity.min.vector,main="clrunifrac vs min shannon diversity",col=transparentdarkorchid, pch=19)
+plot(gUnifrac.vector,diversity.min.vector,main="gunifrac vs min shannon diversity",col=transparentdarkorchid, pch=19)
+plot(eUnifrac.vector,diversity.min.vector,main="eunifrac vs min shannon diversity",col=transparentdarkorchid, pch=19)
 
 par(plotParameters)
 

@@ -57,7 +57,7 @@ mouth.otu <- mouth.otu[,taxaOrder]
 
 clrUnifrac <- CLRUniFrac(mouth.otu, mouth.tree, alpha = c(1))$unifrac[,,1]
 gUnifrac <- GUniFrac(mouth.otu, mouth.tree, alpha = c(1))$unifrac[,,1]
-eUnifrac <- EntropyUniFrac(mouth.otu, mouth.tree, alpha = c(1))$unifrac[,,1]
+eUnifrac <- InformationUniFrac(mouth.otu, mouth.tree, alpha = c(1))$unifrac[,,1]
 #clrDirichletUnifrac <- CLRDirichletUniFrac(mouth.otu, mouth.tree, alpha = c(1))$unifrac[,,1]
 
 #calculate principle coordinates of analysis
