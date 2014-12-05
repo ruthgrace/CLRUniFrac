@@ -99,9 +99,10 @@ EntropyUniFrac <- function (otu.tab, tree, alpha = c(0, 0.5, 1)) {
 		}
 	}
 	
+	cum.prop <- cum
+
 	#convert cum table into entropy
 	cum <- getCumulativeEntropy(cum)
-
 
 	# Calculate various UniFrac distances
 	cum.ct <- round(t(t(cum) * row.sum)) 	# For VAW

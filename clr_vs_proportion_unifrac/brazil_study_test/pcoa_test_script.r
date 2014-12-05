@@ -54,7 +54,7 @@ eUnifrac <- EntropyUniFrac(brazil.otu.tab, brazil.tree, alpha = c(1))$unifrac[,,
 
 #conditions (bv - bacterial vaginosis as scored by nugent/amsel, i - intermediate, n - normal/healthy)
 groups <- MyMetaOrdered$n_status #levels bv, i, n
-
+originalgroups <- groups
 # change conditions so that samples which are more than 50% one taxa are colored by that taxa
 otuSum <- apply(brazil.otu.tab,1,sum)
 otuMax <- apply(brazil.otu.tab,1,max)
@@ -313,5 +313,8 @@ lines(lowess(gUnifrac.pcoa$vectors[,1],otuSum), col="darkorchid4") # lowess line
 #plot(clrDirichletUniFrac.pcoa$vectors[,1],otuSum,main="clr dirichlet vs avg")
 #lines(lowess(clrDirichletUniFrac.pcoa$vectors[,1],otuSum), col="yellow") # lowess line (x,y)
 
+
+
+printSeparation(ruthClrUnifrac.pcoa,gUnifrac.pcoa,eUnifrac.pcoa,levels(originalgroups)[1],levels(originalgroups)[3],originalgroups)
 
 dev.off()

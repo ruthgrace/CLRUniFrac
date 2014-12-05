@@ -1,5 +1,7 @@
 #make overlap matrix
 
+library(vegan)
+
 getOverlap <- function (otu.tab) {	
 
 	# Convert into CLR
@@ -41,4 +43,90 @@ averageReadCount <- function(otu.tab) {
 		}
 	}
 	return(avgReadCount)
+}
+
+printSeparation <- function(ruthClrUnifrac.pcoa,gUnifrac.pcoa,eUnifrac.pcoa,condition1,condition2,groups) {
+
+	print(paste("COMPARING",condition1,"and",condition2))
+
+	#calculate separation clrunifrac
+	group1.indices <- which(groups==condition1)
+	group2.indices <- which(groups==condition2)
+
+	sd.1 <- max(sd(ruthClrUnifrac.pcoa$vectors[group1.indices,1]),sd(ruthClrUnifrac.pcoa$vectors[group2.indices,1]))
+	sd.2 <- max(sd(ruthClrUnifrac.pcoa$vectors[group1.indices,2]),sd(ruthClrUnifrac.pcoa$vectors[group2.indices,2]))
+	sd.3 <- max(sd(ruthClrUnifrac.pcoa$vectors[group1.indices,3]),sd(ruthClrUnifrac.pcoa$vectors[group2.indices,3]))
+
+	group1.1 <- mean(ruthClrUnifrac.pcoa$vectors[group1.indices,1])/sd.1
+	group2.1 <- mean(ruthClrUnifrac.pcoa$vectors[group2.indices,1])/sd.1
+
+	group1.2 <- mean(ruthClrUnifrac.pcoa$vectors[group1.indices,2])/sd.2
+	group2.2 <- mean(ruthClrUnifrac.pcoa$vectors[group2.indices,2])/sd.2
+
+	group1.3 <- mean(ruthClrUnifrac.pcoa$vectors[group1.indices,3])/sd.3
+	group2.3 <- mean(ruthClrUnifrac.pcoa$vectors[group2.indices,3])/sd.3
+
+	group1.12 <- sqrt(group1.1^2 + group1.2^2)
+	group2.12 <- sqrt(group2.1^2 + group2.2^2)
+
+	group1.123 <- sqrt(group1.12^2 + group1.3^2)
+	group2.123 <- sqrt(group2.12^2 + group2.3^2)
+
+
+
+	print(paste("CLRUniFrac 1st component separation: ",abs(group1.1-group2.1)))
+	print(paste("CLRUniFrac 1st and 2nd component separation: ",abs(group1.12-group2.12)))
+	print(paste("CLRUniFrac 1,2,3 component separation: ",abs(group1.123-group2.123)))
+
+
+	#calculate separation gunifrac
+	group1.1 <- mean(gUnifrac.pcoa$vectors[group1.indices,1])
+	group2.1 <- mean(gUnifrac.pcoa$vectors[group2.indices,1])
+
+	group1.2 <- mean(gUnifrac.pcoa$vectors[group1.indices,2])
+	group2.2 <- mean(gUnifrac.pcoa$vectors[group2.indices,2])
+
+	group1.3 <- mean(gUnifrac.pcoa$vectors[group1.indices,3])
+	group2.3 <- mean(gUnifrac.pcoa$vectors[group2.indices,3])
+
+	group1.12 <- sqrt(group1.1^2 + group1.2^2)
+	group2.12 <- sqrt(group2.1^2 + group2.2^2)
+
+	group1.123 <- sqrt(group1.12^2 + group1.3^2)
+	group2.123 <- sqrt(group2.12^2 + group2.3^2)
+
+	print(paste("gUniFrac 1st component separation: ",abs(group1.1-group2.1)))
+	print(paste("gUniFrac 1st and 2nd component separation: ",abs(group1.12-group2.12)))
+	print(paste("gUniFrac 1,2,3 component separation: ",abs(group1.123-group2.123)))
+
+
+	#calculate separation eunifrac
+	group1.1 <- mean(eUnifrac.pcoa$vectors[group1.indices,1])
+	group2.1 <- mean(eUnifrac.pcoa$vectors[group2.indices,1])
+
+	group1.2 <- mean(eUnifrac.pcoa$vectors[group1.indices,2])
+	group2.2 <- mean(eUnifrac.pcoa$vectors[group2.indices,2])
+
+	group1.3 <- mean(eUnifrac.pcoa$vectors[group1.indices,3])
+	group2.3 <- mean(eUnifrac.pcoa$vectors[group2.indices,3])
+
+	group1.12 <- sqrt(group1.1^2 + group1.2^2)
+	group2.12 <- sqrt(group2.1^2 + group2.2^2)
+
+	group1.123 <- sqrt(group1.12^2 + group1.3^2)
+	group2.123 <- sqrt(group2.12^2 + group2.3^2)
+
+	print(paste("eUniFrac 1st component separation: ",abs(group1.1-group2.1)))
+	print(paste("eUniFrac 1st and 2nd component separation: ",abs(group1.12-group2.12)))
+	print(paste("eUniFrac 1,2,3 component separation: ",abs(group1.123-group2.123)))
+
+}
+
+getShannonDiversityDiffMat <- function(otu) {
+	diversityList <- diversity(otu)
+	#put diversity into rows
+	diversityList <- t(diversityList)
+	diversityList <- t(diversityList)
+	distMat <- dist(diversityList,method="manhattan",diag=TRUE,upper=TRUE)
+	return(distMat)
 }

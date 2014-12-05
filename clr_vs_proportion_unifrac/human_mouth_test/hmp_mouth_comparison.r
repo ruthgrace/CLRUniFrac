@@ -253,4 +253,15 @@ lines(lowess(eUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (
 
 dev.off()
 
+for (i in 1:length(levels(groups))) {
+	if (i<length(levels(groups))) {
+		print(paste("i",i,"j",j))
+		iplus1 <- i+1
+		for (j in iplus1:length(levels(groups))) {
+			printSeparation(clrUnifrac.pcoa,gUnifrac.pcoa,eUnifrac.pcoa,levels(groups)[i],levels(groups)[j],groups)
+		}
+	}	
+}
+
+
 palette(originalPalette)
