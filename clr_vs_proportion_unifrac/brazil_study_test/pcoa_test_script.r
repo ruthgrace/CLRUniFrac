@@ -131,10 +131,14 @@ gUnifrac.vector <- unlist(gUnifrac[lower.tri(gUnifrac,diag=TRUE)])
 eUnifrac.vector <- unlist(eUnifrac[lower.tri(eUnifrac,diag=TRUE)])
 #clrDirichletUniFrac.vector <- unlist(clrDirichletUniFrac[lower.tri(clrDirichletUniFrac,diag=TRUE)])
 
-#get shannon diversity difference matrices
-diversity <- getShannonDiversityDiffMat(brazil.otu.tab)
-#put into single dimensional vector for plotting
+#get shannon diversity average matrices
+diversity <- getAvgShannonDiversity(brazil.otu.tab)
 diversity.vector <- unlist(diversity[lower.tri(diversity,diag=TRUE)])
+
+#get shannon diversity difference matrices
+diversity.diff <- getShannonDiversityDiffMat(brazil.otu.tab)
+#put into single dimensional vector for plotting
+diversity.diff.vector <- unlist(diversity.diff[lower.tri(diversity.diff,diag=TRUE)])
 
 
 #convert to dist structure
@@ -319,8 +323,16 @@ lines(lowess(gUnifrac.pcoa$vectors[,1],otuSum), col="darkorchid4") # lowess line
 #plot(clrDirichletUniFrac.pcoa$vectors[,1],otuSum,main="clr dirichlet vs avg")
 #lines(lowess(clrDirichletUniFrac.pcoa$vectors[,1],otuSum), col="yellow") # lowess line (x,y)
 
-
-
 printSeparation(ruthClrUnifrac.pcoa,gUnifrac.pcoa,eUnifrac.pcoa,levels(originalgroups)[1],levels(originalgroups)[3],originalgroups)
+
+#plot unifrac vs. shannon diversity distance matrix
+plot(ruthClrUnifrac.vector,diversity.diff.vector,main="gunifrac vs shannon diversity difference")
+plot(gUnifrac.vector,diversity.diff.vector,main="gunifrac vs shannon diversity difference")
+plot(eUnifrac.vector,diversity.diff.vector,main="gunifrac vs shannon diversity difference")
+
+plot(ruthClrUnifrac.vector,diversity.vector,main="gunifrac vs shannon diversity difference")
+plot(gUnifrac.vector,diversity.vector,main="gunifrac vs shannon diversity difference")
+plot(eUnifrac.vector,diversity.vector,main="gunifrac vs shannon diversity difference")
+
 
 dev.off()
