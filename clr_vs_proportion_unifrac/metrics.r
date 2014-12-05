@@ -39,7 +39,7 @@ averageReadCount <- function(otu.tab) {
 	return(averageGeneric(numSamples,totalReadCount))
 }
 
-averageGeneric <- function(numSamples,matrix) {
+averageGeneric <- function(numSamples,totalReadCount) {
 	avgReadCount <- matrix(nrow=numSamples,ncol=numSamples)
 
 	for(i in 1:numSamples) {
