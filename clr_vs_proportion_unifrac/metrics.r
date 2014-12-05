@@ -36,6 +36,12 @@ averageReadCount <- function(otu.tab) {
 
 	avgReadCount <- matrix(nrow=numSamples,ncol=numSamples)
 
+	return(averageGeneric(numSamples,totalReadCount))
+}
+
+averageGeneric <- function(numSamples,matrix) {
+	avgReadCount <- matrix(nrow=numSamples,ncol=numSamples)
+
 	for(i in 1:numSamples) {
 		for (j in i:numSamples) {
 			avgReadCount[i,j] <- mean(c(totalReadCount[i],totalReadCount[j]))
@@ -129,4 +135,9 @@ getShannonDiversityDiffMat <- function(otu) {
 	diversityList <- t(diversityList)
 	distMat <- dist(diversityList,method="manhattan",diag=TRUE,upper=TRUE)
 	return(distMat)
+}
+
+getAvgShannonDiversity <- function(otu) {
+	diversityList <- diversity(otu)
+	return(averageGeneric(nrow(otu),diversityList))
 }

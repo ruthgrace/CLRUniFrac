@@ -131,6 +131,12 @@ gUnifrac.vector <- unlist(gUnifrac[lower.tri(gUnifrac,diag=TRUE)])
 eUnifrac.vector <- unlist(eUnifrac[lower.tri(eUnifrac,diag=TRUE)])
 #clrDirichletUniFrac.vector <- unlist(clrDirichletUniFrac[lower.tri(clrDirichletUniFrac,diag=TRUE)])
 
+#get shannon diversity difference matrices
+diversity <- getShannonDiversityDiffMat(brazil.otu.tab)
+#put into single dimensional vector for plotting
+diversity.vector <- unlist(diversity[lower.tri(diversity,diag=TRUE)])
+
+
 #convert to dist structure
 ruthClrUnifrac.dist <- as.dist(ruthClrUnifrac)
 gUnifrac.dist <- as.dist(gUnifrac)
