@@ -1,3 +1,4 @@
+options(error=recover)
 #pcoa test script
 
 library(ape)
@@ -326,14 +327,17 @@ lines(lowess(gUnifrac.pcoa$vectors[,1],otuSum), col="darkorchid4") # lowess line
 printSeparation(ruthClrUnifrac.pcoa,gUnifrac.pcoa,eUnifrac.pcoa,levels(originalgroups)[1],levels(originalgroups)[3],originalgroups)
 
 palette(c("chocolate4","darkolivegreen","cyan","dodgerblue","navy","magenta","red","orange","blue","aquamarine","darkorchid4"))
-#plot unifrac vs. shannon diversity distance matrix
-plot(ruthClrUnifrac.vector,diversity.diff.vector,main="clrunifrac vs shannon diversity difference",col=rgb(.1,1,.1,0.1), pch=19)
-plot(gUnifrac.vector,diversity.diff.vector,main="gunifrac vs shannon diversity difference",col=rgb(.1,1,.1,0.1), pch=19)
-plot(eUnifrac.vector,diversity.diff.vector,main="eunifrac vs shannon diversity difference",col=rgb(.1,1,.1,0.1), pch=19)
 
-plot(ruthClrUnifrac.vector,diversity.vector,main="clrunifrac vs shannon diversity",col=rgb(.1,1,.1,0.1), pch=19)
-plot(gUnifrac.vector,diversity.vector,main="gunifrac vs shannon diversity",col=rgb(.1,1,.1,0.1), pch=19)
-plot(eUnifrac.vector,diversity.vector,main="eunifrac vs shannon diversity",col=rgb(.1,1,.1,0.1), pch=19)
+darkorchid <- col2rgb("darkorchid4")
+transparentdarkorchid <- rgb(darkorchid[1]/255,darkorchid[2]/255,darkorchid[3]/255,0.1)
+#plot unifrac vs. shannon diversity distance matrix
+plot(ruthClrUnifrac.vector,diversity.diff.vector,main="clrunifrac vs shannon diversity difference",col=transparentdarkorchid, pch=19)
+plot(gUnifrac.vector,diversity.diff.vector,main="gunifrac vs shannon diversity difference",col=transparentdarkorchid, pch=19)
+plot(eUnifrac.vector,diversity.diff.vector,main="eunifrac vs shannon diversity difference",col=transparentdarkorchid, pch=19)
+
+plot(ruthClrUnifrac.vector,diversity.vector,main="clrunifrac vs shannon diversity",col=transparentdarkorchid, pch=19)
+plot(gUnifrac.vector,diversity.vector,main="gunifrac vs shannon diversity",col=transparentdarkorchid, pch=19)
+plot(eUnifrac.vector,diversity.vector,main="eunifrac vs shannon diversity",col=transparentdarkorchid, pch=19)
 
 par(plotParameters)
 

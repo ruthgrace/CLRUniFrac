@@ -1,3 +1,4 @@
+options(error=recover)
 
 library(ape)
 library(phangorn)
@@ -7,7 +8,7 @@ library(phangorn)
 #attempt at sparsity filter instead -- 30 counts minimum is what is stable
 
 
-mouth.otu <- read.table("hmp_mouth_data.txt",sep="\t",header=TRUE,row.names=1)
+mouth.otu <- read.table("hmp_mouth_data_high_read_count.txt",sep="\t",header=TRUE,row.names=1)
 
 groups <- as.factor(c(rep("buccal mucosa",20),rep("tongue dorsum",20),rep("attached keratinized gingiva",20),rep("hard palate",20),rep("saliva",20)))
 
@@ -143,7 +144,7 @@ originalPalette <- palette()
 
 
 #save to pdf
-pdf("hmp_mouth_comparison_pcoa_low_read_count_no_bar_plots.pdf")
+pdf("hmp_mouth_comparison_pcoa_high_read_count_no_bar_plots.pdf")
 
 #plot overlap vs clrunifrac distance
 plot(clrUnifrac.vector,overlap.vector,main="clr combination weights vs overlap")
@@ -248,6 +249,30 @@ lines(lowess(eUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (
 
 #plot(clrDirichletUnifrac.pcoa$vectors[,1],mouth.sum,main="clr dirichlet vs avg")
 #lines(lowess(clrDirichletUnifrac.pcoa$vectors[,1],mouth.sum), col="yellow") # lowess line (x,y)
+
+
+#get shannon diversity average matrices
+diversity <- getAvgShannonDiversity(mouth.original)
+diversity.vector <- unlist(diversity[lower.tri(diversity,diag=TRUE)])
+
+#get shannon diversity difference matrices
+diversity.diff <- getShannonDiversityDiffMat(mouth.original)
+#put into single dimensional vector for plotting
+diversity.diff.vector <- unlist(diversity.diff[lower.tri(diversity.diff,diag=TRUE)])
+
+
+darkorchid <- col2rgb("darkorchid4")
+transparentdarkorchid <- rgb(darkorchid[1]/255,darkorchid[2]/255,darkorchid[3]/255,0.1)
+#plot unifrac vs. shannon diversity distance matrix
+plot(clrUnifrac.vector,diversity.diff.vector,main="clrunifrac vs shannon diversity difference",col=transparentdarkorchid, pch=19)
+plot(gUnifrac.vector,diversity.diff.vector,main="gunifrac vs shannon diversity difference",col=transparentdarkorchid, pch=19)
+plot(eUnifrac.vector,diversity.diff.vector,main="eunifrac vs shannon diversity difference",col=transparentdarkorchid, pch=19)
+
+plot(clrUnifrac.vector,diversity.vector,main="clrunifrac vs shannon diversity",col=transparentdarkorchid, pch=19)
+plot(gUnifrac.vector,diversity.vector,main="gunifrac vs shannon diversity",col=transparentdarkorchid, pch=19)
+plot(eUnifrac.vector,diversity.vector,main="eunifrac vs shannon diversity",col=transparentdarkorchid, pch=19)
+
+par(plotParameters)
 
 
 
