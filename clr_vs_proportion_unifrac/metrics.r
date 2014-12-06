@@ -218,10 +218,8 @@ getPCoASep <- function(pcoa,groups) {
 	diff.12 <- sqrt(diff.1^2 + diff.2^2)
 	diff.123 <- sqrt(diff.12^2 + diff.3^2)
 
-	returnList <- list()
-	returnList$separationOn1 <- diff.1
-	returnList$separationOn12 <- diff.12
-	returnList$separationOn123 <- diff.123
-
+	returnList <- data.frame(c(diff.1,diff.12,diff.123))
+	rownames(returnList) <- c("separationOn1,separationOn12,separationOn123")
+	returnList <- t(returnList)
 	return(returnList)
 }

@@ -4,7 +4,43 @@
 
 # table comes out with samples in columns and OTUs in rows
 
+options(error=recover)
+
 library(phangorn)
+library(vegan)
+
+writeFile <- function(saliva,stool,tree,filename,condition1,condition2,otuIDs) {
+	#concatenate	
+	data <- data.frame(saliva,stool)
+	colnames(data) <- sub("^X", "", colnames(data))
+	rownames(data) <- otuIDs
+
+	#make condition vector
+	groups <- as.factor(c(rep(condition1,ncol(saliva)),rep(condition2,ncol(stool))))
+
+	#get rid of zero sum rows
+	data.sum <- apply(data,1,sum)
+	data.0 <- data[data.sum > 0,]
+	data <- data.0
+
+	# get rid of extra OTUs in tree
+	tree$tip.label <- gsub("'","",tree$tip.label)
+	absent <- tree$tip.label[!(tree$tip.label %in% rownames(data))]
+	if (length(absent) != 0) {
+			tree <- drop.tip(tree, absent)
+	}
+	write.tree(tree,file=paste(filename,"subtree.tre",sep="_"))
+
+	#make sample names that contain condition
+
+	colnames(data) <- paste(groups,colnames(data),sep="_")
+
+	#write otu counts into table
+	write.table(data,file=paste(filename,"hmp_data.txt",sep="_"),sep="\t",quote=FALSE)
+	# read in with read.table("hmp_mouth_data.txt",sep="\t",header=TRUE,row.names=1)	
+}
+
+
 
 hmpData <- "../../../../fodor/otu_table_psn_v35.txt"
 hmpMetadata <- "../../../../fodor/v35_map_uniquebyPSN.txt"
@@ -56,6 +92,22 @@ writeFile(saliva.low,stool.low,tree,"low_sequencing_depth",saliva,stool,otuIDs)
 writeFile(saliva.med,stool.med,tree,"med_sequencing_depth",saliva,stool,otuIDs)
 writeFile(saliva.high,stool.high,tree,"high_sequencing_depth",saliva,stool,otuIDs)
 
+#examine diversity
+saliva.low.div <- diversity(saliva.low)
+stool.low.div <- diversity(stool.low)
+
+saliva.med.div <- diversity(saliva.med)
+stool.med.div <- diversity(stool.med)
+
+saliva.high.div <- diversity(saliva.high)
+stool.high.div <- diversity(stool.high)
+
+summary(saliva.low.div)
+summary(stool.low.div)
+summary(saliva.med.div)
+summary(stool.med.div)
+summary(saliva.high.div)
+summary(stool.high.div)
 # #pick 20 random samples from each category
 
 # bm.rand <- bm.otu[,as.integer(sample(seq(1,length(colnames(bm.otu)),1),20,replace=FALSE))]
@@ -65,34 +117,3 @@ writeFile(saliva.high,stool.high,tree,"high_sequencing_depth",saliva,stool,otuID
 # s.rand <- s.otu[,as.integer(sample(seq(1,length(colnames(s.otu)),1),20,replace=FALSE))]
 
 
-
-writeFile <- function(saliva,stool,tree,filename,condition1,condition2,otuIDs) {
-	#concatenate	
-	data <- data.frame(saliva,stool)
-	colnames(data) <- sub("^X", "", colnames(data))
-	rownames(data) <- otuIDs
-
-	#make condition vector
-	groups <- as.factor(c(rep(condition1,ncol(saliva)),rep(condition2,ncol(stool))))
-
-	#get rid of zero sum rows
-	data.sum <- apply(data,1,sum)
-	data.0 <- data[data.sum > 0,]
-	data <- data.0
-
-	# get rid of extra OTUs in tree
-	tree$tip.label <- gsub("'","",tree$tip.label)
-	absent <- tree$tip.label[!(tree$tip.label %in% colnames(data))]
-	if (length(absent) != 0) {
-			tree <- drop.tip(tree, absent)
-	}
-	write.tree(tree,file=paste(filename,"subtree.tre",sep="_"))
-
-	#make sample names that contain condition
-
-	colnames(data) <- paste(groups,colnames(data),sep="_")
-
-	#write otu counts into table
-	write.table(data,file=paste(filename,"hmp_data.txt",sep="_"),sep="\t",quote=FALSE)
-	# read in with read.table("hmp_mouth_data.txt",sep="\t",header=TRUE,row.names=1)	
-}
