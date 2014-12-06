@@ -193,10 +193,8 @@ getDataSetSep <- function(otu,groups,tree) {
 	wUnifrac.sep <- getPCoASep(wUnifrac.pcoa)
 	eUnifrac.sep <- getPCoASep(eUnifrac.pcoa)
 
-	returnList <- list()
-	returnList$uwUnifrac <- uwUnifrac.sep
-	returnList$wUnifrac <- wUnifrac.sep
-	returnList$eUnifrac <- eUnifrac.sep
+	returnList <- data.frame(uwUnifrac.sep,wUnifrac.sep,eUnifrac.sep)
+	colnames(returnList) <- c("uwUnifrac","wUnifrac","eUnifrac")
 	return(returnList)
 }
 
