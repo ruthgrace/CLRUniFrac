@@ -8,7 +8,7 @@ library(phangorn)
 
 hmpData <- "../../../../fodor/otu_table_psn_v35.txt"
 hmpMetadata <- "../../../../fodor/v35_map_uniquebyPSN.txt"
-treeFile <- "../../../../fodor/rep_set_v35.tre")
+treeFile <- "../../../../fodor/rep_set_v35.tre"
 
 id <- read.table(hmpMetadata, header=TRUE, sep="\t", row.names=1)
 otu <- t( read.table(hmpData, header=T, sep="\t", row.names=1, check.names=FALSE) )
@@ -33,26 +33,28 @@ stool.id <- rownames(id)[which(id$HMPbodysubsite==stool)]
 saliva.otu <- site <- otu[rownames(otu) %in% saliva.id,]
 stool.otu <- site <- otu[rownames(otu) %in% stool.id,]
 
+otuIDs <- colnames(site)
+
 
 saliva.otu <- apply(saliva.otu, 1, function(x){as.numeric(x)})
 stool.otu <- apply(stool.otu, 1, function(x){as.numeric(x)})
 
 # remove all samples with read count lower than 10,000
 saliva.sum <- apply(saliva.otu,2,sum)
-stool.sum <- apply(stool.otu,2,sum)\
+stool.sum <- apply(stool.otu,2,sum)
 
-saliva.low <- saliva.otu[,which(saliva.sum>10000)]
-stool.low <- stool.otu[,which(stool.sum>10000)]
+saliva.low <- saliva.otu[,which(saliva.sum<3000)]
+stool.low <- stool.otu[,which(stool.sum<3000)]
 
-saliva.med <- saliva.otu[,which(saliva.sum>10000)]
-stool.med <- stool.otu[,which(stool.sum>10000)]
+saliva.med <- saliva.otu[,which((saliva.sum>3000) & (saliva.sum < 6000))]
+stool.med <- stool.otu[,which((stool>3000) & (stool.sum < 6000))]
 
-saliva.high <- saliva.otu[,which(saliva.sum>10000)]
-stool.high <- stool.otu[,which(stool.sum>10000)]
+saliva.high <- saliva.otu[,which(saliva.sum>6000)]
+stool.high <- stool.otu[,which(stool.sum>6000)]
 
-writeFile(saliva.low,stool.low,tree,"low_sequencing_depth")
-writeFile(saliva.med,stool.med,tree,"med_sequencing_depth")
-writeFile(saliva.high,stool.high,tree,"high_sequencing_depth")
+writeFile(saliva.low,stool.low,tree,"low_sequencing_depth",saliva,stool,otuIDs)
+writeFile(saliva.med,stool.med,tree,"med_sequencing_depth",saliva,stool,otuIDs)
+writeFile(saliva.high,stool.high,tree,"high_sequencing_depth",saliva,stool,otuIDs)
 
 # #pick 20 random samples from each category
 
@@ -64,16 +66,14 @@ writeFile(saliva.high,stool.high,tree,"high_sequencing_depth")
 
 
 
-writeFile <- function(saliva,stool,tree,filename) {
-	otuIDs <- colnames(saliva)
-
+writeFile <- function(saliva,stool,tree,filename,condition1,condition2,otuIDs) {
 	#concatenate	
 	data <- data.frame(saliva,stool)
 	colnames(data) <- sub("^X", "", colnames(data))
 	rownames(data) <- otuIDs
 
 	#make condition vector
-	groups <- as.factor(c(rep("Saliva",ncol(saliva)),rep("Stool",ncol(stool))))
+	groups <- as.factor(c(rep(condition1,ncol(saliva)),rep(condition2,ncol(stool))))
 
 	#get rid of zero sum rows
 	data.sum <- apply(data,1,sum)
