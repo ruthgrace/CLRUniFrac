@@ -179,7 +179,6 @@ getMaxShannonDiversity <- function(otu) {
 getDataSetSep <- function(otu,groups,tree) {
 	#take in otu table, rows are samples, cols are OTUs
 	# return list of 1) unweighted UniFrac 2) weighted UniFrac 3) iUniFrac
-
 	unifrac <- GUniFrac(otu, tree, alpha = c(1))
 	uwUnifrac <- unifrac$unifrac[,,1]
 	wUnifrac <- unifrac$unifrac[,,3]
@@ -199,18 +198,19 @@ getDataSetSep <- function(otu,groups,tree) {
 }
 
 getPCoASep <- function(pcoa,groups) {
+	groups <- as.factor(groups)
 	#given pcoa and metadata
 	# returns separations on axis 1, 1&2, 1&2&3
-	group1.1 <- pcoa$vector[which(groups==levels(groups)[1]),1]
-	group2.1 <- pcoa$vector[which(groups==levels(groups)[2]),1]
+	group1.1 <- pcoa$vectors[which(groups==levels(groups)[1]),1]
+	group2.1 <- pcoa$vectors[which(groups==levels(groups)[2]),1]
 	diff.1 <- abs(mean(group1.1) - mean(group2.1))/sd(pcoa$vector[,1])
 
-	group1.2 <- pcoa$vector[which(groups==levels(groups)[1]),2]
-	group2.2 <- pcoa$vector[which(groups==levels(groups)[2]),2]
+	group1.2 <- pcoa$vectors[which(groups==levels(groups)[1]),2]
+	group2.2 <- pcoa$vectors[which(groups==levels(groups)[2]),2]
 	diff.2 <- abs(mean(group1.1) - mean(group2.1))/sd(pcoa$vector[,2])
 
-	group1.3 <- pcoa$vector[which(groups==levels(groups)[1]),3]
-	group2.3 <- pcoa$vector[which(groups==levels(groups)[2]),3]
+	group1.3 <- pcoa$vectors[which(groups==levels(groups)[1]),3]
+	group2.3 <- pcoa$vectors[which(groups==levels(groups)[2]),3]
 	diff.3 <- abs(mean(group1.1) - mean(group2.1))/sd(pcoa$vector[,3])
 
 	diff.12 <- sqrt(diff.1^2 + diff.2^2)
