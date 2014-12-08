@@ -116,14 +116,19 @@ transparentdarkorchid <- rgb(darkorchid[1]/255,darkorchid[2]/255,darkorchid[3]/2
 
 pcoaLabels <- c(rep("pcoa1",3),rep("pcoa12",3),rep("pcoa123",3))
 unifracLabels <- rep(c("uwUnifrac","wUnifrac","iUnifrac"),3)
-plotDataColNames <- paste(pcoaLabels, unifracLabels, sep = ".")
+plotSeqDepthDataColNames <- paste(pcoaLabels, unifracLabels, sep = ".")
+
+sparsityLabels <- c(rep("sparsity.001",3),rep("sparsity.0001",3),rep("sparsity.00001",3))
+plotSparsityDataColNames <- paste(sparsityLabels, unifracLabels, sep = ".")
+
+
 
 # SEQUENCING DEPTH TEST
 #low
 low.seq.depth.reps <- list()
 #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
 low.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(low.seq.depth.plot.data) <- plotDataColNames
+colnames(low.seq.depth.plot.data) <- plotSeqDepthDataColNames
 for (i in 1:replicates) {
 	low.seq.depth.reps[[i]] <- runReplicate(low.otu,low.groups,low.tree)
 	low.seq.depth.plot.data[i,] <- unlist(data.frame(t(low.seq.depth.reps[[i]])))
@@ -131,7 +136,7 @@ for (i in 1:replicates) {
 #med
 med.seq.depth.reps <- list()
 med.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(med.seq.depth.plot.data) <- plotDataColNames
+colnames(med.seq.depth.plot.data) <- plotSeqDepthDataColNames
 for (i in 1:replicates) {
 	med.seq.depth.reps[[i]] <- runReplicate(med.otu,med.groups,med.tree)
 	med.seq.depth.plot.data[i,] <- unlist(data.frame(t(med.seq.depth.reps[[i]])))
@@ -139,7 +144,7 @@ for (i in 1:replicates) {
 #high
 high.seq.depth.reps <- list()
 high.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(high.seq.depth.plot.data) <- plotDataColNames
+colnames(high.seq.depth.plot.data) <- plotSeqDepthDataColNames
 for (i in 1:replicates) {
 	high.seq.depth.reps[[i]] <- runReplicate(high.otu,high.groups,high.tree)
 	high.seq.depth.plot.data[i,] <- unlist(data.frame(t(high.seq.depth.reps[[i]])))
@@ -153,7 +158,7 @@ stripchart(data.frame(),pch=19,col=transparentdarkorchid)
 low.seq.depth.diff.reps <- list()
 #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
 low.seq.depth.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(low.seq.depth.diff.plot.data) <- plotDataColNames
+colnames(low.seq.depth.diff.plot.data) <- plotSeqDepthDataColNames
 for (i in 1:replicates) {
 	low.seq.depth.diff.reps[[i]] <- runMixedReplicate(low.otu,med.otu,low.groups,med.groups,low.tree)
 	low.seq.depth.diff.plot.data[i,] <- unlist(data.frame(t(low.seq.depth.diff.reps[[i]])))
@@ -161,7 +166,7 @@ for (i in 1:replicates) {
 #med/high
 med.seq.depth.diff.reps <- list()
 med.seq.depth.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(med.seq.depth.diff.plot.data) <- plotDataColNames
+colnames(med.seq.depth.diff.plot.data) <- plotSeqDepthDataColNames
 for (i in 1:replicates) {
 	med.seq.depth.diff.reps[[i]] <- runMixedReplicate(med.otu,high.otu,med.groups,high.groups,med.tree)
 	med.seq.depth.diff.plot.data[i,] <- unlist(data.frame(t(med.seq.depth.diff.reps[[i]])))
@@ -169,15 +174,49 @@ for (i in 1:replicates) {
 #low/high
 high.seq.depth.diff.reps <- list()
 high.seq.depth.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(high.seq.depth.diff.plot.data) <- plotDataColNames
+colnames(high.seq.depth.diff.plot.data) <- plotSeqDepthDataColNames
 for (i in 1:replicates) {
 	high.seq.depth.diff.reps[[i]] <- runMixedReplicate(low.otu,high.otu,low.groups,high.groups,high.tree)
 	high.seq.depth.diff.plot.data[i,] <- unlist(data.frame(t(high.seq.depth.diff.reps[[i]])))
 }
 
-
-
 # SPARSITY TEST
+#remove OTUs rarer than a thresh hold throughout all samples
+high.otu.sum <- apply(high.otu,2,sum)
+high.total.sum <- sum(high.otu)
+
+#0.1% sparsity filter
+sparse.otu.001 <- high.otu[,(which(high.otu.sum >= (0.001*high.total.sum)))]
+sparse.otu.001.reps <- list()
+#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+sparse.otu.001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+colnames(sparse.otu.001.plot.data) <- plotSparsityDataColNames
+for (i in 1:replicates) {
+	sparse.otu.001.reps[[i]] <- runReplicate(sparse.otu.001,high.groups,high.tree)
+	sparse.otu.001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.001.reps[[i]])))
+}
+
+#0.01% sparsity filter
+sparse.otu.0001 <- high.otu[,(which(high.otu.sum >= (0.0001*high.total.sum)))]
+sparse.otu.0001.reps <- list()
+#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+sparse.otu.0001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+colnames(sparse.otu.0001.plot.data) <- plotSparsityDataColNames
+for (i in 1:replicates) {
+	sparse.otu.0001.reps[[i]] <- runReplicate(sparse.otu.0001,high.groups,high.tree)
+	sparse.otu.0001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.0001.reps[[i]])))
+}
+
+#0.001% sparsity filter
+sparse.otu.00001 <- high.otu[,(which(high.otu.sum >= (0.00001*high.total.sum)))]
+sparse.otu.00001.reps <- list()
+#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+sparse.otu.00001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+colnames(sparse.otu.00001.plot.data) <- plotSparsityDataColNames
+for (i in 1:replicates) {
+	sparse.otu.00001.reps[[i]] <- runReplicate(sparse.otu.00001,high.groups,high.tree)
+	sparse.otu.00001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.00001.reps[[i]])))
+}
 
 # SPARSITY DIFFERENCE TEST
 
