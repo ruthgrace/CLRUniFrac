@@ -213,8 +213,8 @@ getPCoASep <- function(pcoa,groups) {
 	group2.3 <- pcoa$vectors[which(groups==levels(groups)[2]),3]
 	diff.3 <- abs(mean(group1.1) - mean(group2.1))/sd(pcoa$vector[,3])
 
-	diff.12 <- sqrt(diff.1^2 + diff.2^2)
-	diff.123 <- sqrt(diff.12^2 + diff.3^2)
+	diff.12 <- sqrt((diff.1^2) + (diff.2^2))
+	diff.123 <- sqrt((diff.12^2) + (diff.3^2))
 
 	returnList <- data.frame(c(diff.1,diff.12,diff.123))
 	rownames(returnList) <- c("separationOn1","separationOn12","separationOn123")

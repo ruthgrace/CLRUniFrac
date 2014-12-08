@@ -18,9 +18,8 @@ removeTreeTipLabelSingleQuotes <- function(tree) {
 	return(tree)
 }
 
-runReplicate <- function(otu,groups,tree) {
+runReplicate <- function(otu,groups,tree,nSamples) {
 	
-	nSamples <- 50
 	
 	#sample 50 samples from condition 1
 	group1.indices <- which(groups==levels(groups)[1])
@@ -34,13 +33,12 @@ runReplicate <- function(otu,groups,tree) {
 	data <- rbind(group1.rand,group2.rand)
 
 	#make groups
-	newGroups <- c(rep(levels(groups)[1],50),rep(levels(groups)[2],50))
+	newGroups <- c(rep(levels(groups)[1],nSamples),rep(levels(groups)[2],nSamples))
 	return(getDataSetSep(data,newGroups,tree))
 }
 
-runMixedReplicate <- function(otu1,otu2,groups1,groups2,tree) {
+runMixedReplicate <- function(otu1,otu2,groups1,groups2,tree,nSamples) {
 	
-	nSamples <- 50
 	
 	#sample 50 samples from condition 1,group1
 	group1.indices <- which(groups1==levels(groups1)[1])
@@ -54,7 +52,7 @@ runMixedReplicate <- function(otu1,otu2,groups1,groups2,tree) {
 	data <- rbind(group1.rand,group2.rand)
 
 	#make groups
-	newGroups <- c(rep(levels(groups)[1],50),rep(levels(groups)[2],50))
+	newGroups <- c(rep(levels(groups1)[1],nSamples),rep(levels(groups2)[2],nSamples))
 	return(getDataSetSep(data,newGroups,tree))
 }
 
@@ -118,14 +116,14 @@ transparentdarkorchid <- rgb(darkorchid[1]/255,darkorchid[2]/255,darkorchid[3]/2
 
 pcoaLabels <- c(rep("pcoa1",3),rep("pcoa12",3),rep("pcoa123",3))
 unifracLabels <- rep(c("uwUnifrac","wUnifrac","iUnifrac"),3)
-plotSeqDepthDataColNames <- paste(pcoaLabels, unifracLabels, sep = ".")
+plotDataColNames <- paste(pcoaLabels, unifracLabels, sep = ".")
 
-sparsityLabels <- c(rep("sparsity.001",3),rep("sparsity.0001",3),rep("sparsity.00001",3))
-plotSparsityDataColNames <- paste(sparsityLabels, unifracLabels, sep = ".")
+# sparsityLabels <- c(rep("sparsity.001",3),rep("sparsity.0001",3),rep("sparsity.00001",3))
+# plotSparsityDataColNames <- paste(sparsityLabels, unifracLabels, sep = ".")
 
-diversityLabels <- c(rep("low.diversity",3),rep("high.diversity",3))
-shortUnifracLabels <- rep(c("uwUnifrac","wUnifrac","iUnifrac"),2)
-plotDiversityDataColNames <- paste(diversityLabels, shortUnifracLabels, sep = ".")
+# diversityLabels <- c(rep("low.diversity",3),rep("high.diversity",3))
+# shortUnifracLabels <- rep(c("uwUnifrac","wUnifrac","iUnifrac"),2)
+# plotDiversityDataColNames <- paste(diversityLabels, shortUnifracLabels, sep = ".")
 
 
 # SEQUENCING DEPTH TEST
@@ -133,25 +131,25 @@ plotDiversityDataColNames <- paste(diversityLabels, shortUnifracLabels, sep = ".
 low.seq.depth.reps <- list()
 #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
 low.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(low.seq.depth.plot.data) <- plotSeqDepthDataColNames
+colnames(low.seq.depth.plot.data) <- plotDataColNames
 for (i in 1:replicates) {
-	low.seq.depth.reps[[i]] <- runReplicate(low.otu,low.groups,low.tree)
+	low.seq.depth.reps[[i]] <- runReplicate(low.otu,low.groups,low.tree,50)
 	low.seq.depth.plot.data[i,] <- unlist(data.frame(t(low.seq.depth.reps[[i]])))
 }
 #med
 med.seq.depth.reps <- list()
 med.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(med.seq.depth.plot.data) <- plotSeqDepthDataColNames
+colnames(med.seq.depth.plot.data) <- plotDataColNames
 for (i in 1:replicates) {
-	med.seq.depth.reps[[i]] <- runReplicate(med.otu,med.groups,med.tree)
+	med.seq.depth.reps[[i]] <- runReplicate(med.otu,med.groups,med.tree,50)
 	med.seq.depth.plot.data[i,] <- unlist(data.frame(t(med.seq.depth.reps[[i]])))
 }
 #high
 high.seq.depth.reps <- list()
 high.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(high.seq.depth.plot.data) <- plotSeqDepthDataColNames
+colnames(high.seq.depth.plot.data) <- plotDataColNames
 for (i in 1:replicates) {
-	high.seq.depth.reps[[i]] <- runReplicate(high.otu,high.groups,high.tree)
+	high.seq.depth.reps[[i]] <- runReplicate(high.otu,high.groups,high.tree,50)
 	high.seq.depth.plot.data[i,] <- unlist(data.frame(t(high.seq.depth.reps[[i]])))
 }
 
@@ -163,25 +161,25 @@ stripchart(data.frame(),pch=19,col=transparentdarkorchid)
 low.seq.depth.diff.reps <- list()
 #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
 low.seq.depth.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(low.seq.depth.diff.plot.data) <- plotSeqDepthDataColNames
+colnames(low.seq.depth.diff.plot.data) <- plotDataColNames
 for (i in 1:replicates) {
-	low.seq.depth.diff.reps[[i]] <- runMixedReplicate(low.otu,med.otu,low.groups,med.groups,low.tree)
+	low.seq.depth.diff.reps[[i]] <- runMixedReplicate(low.otu,med.otu,low.groups,med.groups,low.tree,50)
 	low.seq.depth.diff.plot.data[i,] <- unlist(data.frame(t(low.seq.depth.diff.reps[[i]])))
 }
 #med/high
 med.seq.depth.diff.reps <- list()
 med.seq.depth.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(med.seq.depth.diff.plot.data) <- plotSeqDepthDataColNames
+colnames(med.seq.depth.diff.plot.data) <- plotDataColNames
 for (i in 1:replicates) {
-	med.seq.depth.diff.reps[[i]] <- runMixedReplicate(med.otu,high.otu,med.groups,high.groups,med.tree)
+	med.seq.depth.diff.reps[[i]] <- runMixedReplicate(med.otu,high.otu,med.groups,high.groups,med.tree,50)
 	med.seq.depth.diff.plot.data[i,] <- unlist(data.frame(t(med.seq.depth.diff.reps[[i]])))
 }
 #low/high
 high.seq.depth.diff.reps <- list()
 high.seq.depth.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(high.seq.depth.diff.plot.data) <- plotSeqDepthDataColNames
+colnames(high.seq.depth.diff.plot.data) <- plotDataColNames
 for (i in 1:replicates) {
-	high.seq.depth.diff.reps[[i]] <- runMixedReplicate(low.otu,high.otu,low.groups,high.groups,high.tree)
+	high.seq.depth.diff.reps[[i]] <- runMixedReplicate(low.otu,high.otu,low.groups,high.groups,high.tree,50)
 	high.seq.depth.diff.plot.data[i,] <- unlist(data.frame(t(high.seq.depth.diff.reps[[i]])))
 }
 
@@ -197,7 +195,7 @@ sparse.otu.001.reps <- list()
 sparse.otu.001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(sparse.otu.001.plot.data) <- plotSparsityDataColNames
 for (i in 1:replicates) {
-	sparse.otu.001.reps[[i]] <- runReplicate(sparse.otu.001,high.groups,high.tree)
+	sparse.otu.001.reps[[i]] <- runReplicate(sparse.otu.001,high.groups,high.tree,50)
 	sparse.otu.001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.001.reps[[i]])))
 }
 
@@ -208,7 +206,7 @@ sparse.otu.0001.reps <- list()
 sparse.otu.0001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(sparse.otu.0001.plot.data) <- plotSparsityDataColNames
 for (i in 1:replicates) {
-	sparse.otu.0001.reps[[i]] <- runReplicate(sparse.otu.0001,high.groups,high.tree)
+	sparse.otu.0001.reps[[i]] <- runReplicate(sparse.otu.0001,high.groups,high.tree,50)
 	sparse.otu.0001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.0001.reps[[i]])))
 }
 
@@ -219,11 +217,23 @@ sparse.otu.00001.reps <- list()
 sparse.otu.00001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(sparse.otu.00001.plot.data) <- plotSparsityDataColNames
 for (i in 1:replicates) {
-	sparse.otu.00001.reps[[i]] <- runReplicate(sparse.otu.00001,high.groups,high.tree)
+	sparse.otu.00001.reps[[i]] <- runReplicate(sparse.otu.00001,high.groups,high.tree,50)
 	sparse.otu.00001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.00001.reps[[i]])))
 }
 
+pdf("sparsityTestPlots.pdf")
+stripchart(sparse.otu.001.plot.data,vertical=TRUE,main="sparsity filter at 0.1%",group.names=colnames(sparse.otu.001.plot.data),pch=19,col=transparentdarkorchid)
+stripchart(sparse.otu.0001.plot.data,vertical=TRUE,main="sparsity filter at 0.01%",group.names=colnames(sparse.otu.0001.plot.data),pch=19,col=transparentdarkorchid)
+stripchart(sparse.otu.00001.plot.data,vertical=TRUE,main="sparsity filter at 0.001%",group.names=colnames(sparse.otu.00001.plot.data),pch=19,col=transparentdarkorchid)
+dev.off()
+
 # SPARSITY DIFFERENCE TEST
+sparse.diff.otu.001 <- high.otu
+sparse.diff.otu.001[,(which(high.otu.sum < (0.001*high.total.sum)))] <- 0
+sparse.diff.otu.0001 <- high.otu
+sparse.diff.otu.0001[,(which(high.otu.sum < (0.0001*high.total.sum)))] <- 0
+sparse.diff.otu.00001 <- high.otu
+sparse.diff.otu.00001[,(which(high.otu.sum < (0.00001*high.total.sum)))] <- 0
 
 #low/med
 sparse.diff.otu.1.reps <- list()
@@ -231,7 +241,7 @@ sparse.diff.otu.1.reps <- list()
 sparse.diff.otu.1.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(sparse.diff.otu.1.plot.data) <- plotSparsityDataColNames
 for (i in 1:replicates) {
-	sparse.diff.otu.1.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.0001,high.groups,high.groups,high.tree)
+	sparse.diff.otu.1.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.0001,high.groups,high.groups,high.tree,50)
 	sparse.diff.otu.1.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.1.reps[[i]])))
 }
 
@@ -241,7 +251,7 @@ sparse.diff.otu.2.reps <- list()
 sparse.diff.otu.2.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(sparse.diff.otu.2.plot.data) <- plotSparsityDataColNames
 for (i in 1:replicates) {
-	sparse.diff.otu.2.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.00001,high.groups,high.groups,high.tree)
+	sparse.diff.otu.2.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.00001,high.groups,high.groups,high.tree,50)
 	sparse.diff.otu.2.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.2.reps[[i]])))
 }
 
@@ -251,7 +261,7 @@ sparse.diff.otu.3.reps <- list()
 sparse.diff.otu.3.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(sparse.diff.otu.3.plot.data) <- plotSparsityDataColNames
 for (i in 1:replicates) {
-	sparse.diff.otu.3.reps[[i]] <- runMixedReplicate(sparse.diff.otu.0001,sparse.diff.otu.00001,high.groups,high.groups,high.tree)
+	sparse.diff.otu.3.reps[[i]] <- runMixedReplicate(sparse.diff.otu.0001,sparse.diff.otu.00001,high.groups,high.groups,high.tree,50)
 	sparse.diff.otu.3.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.3.reps[[i]])))
 }
 
@@ -276,8 +286,8 @@ low.diversity.otu.reps <- list()
 #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
 low.diversity.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(low.diversity.plot.data) <- plotDiversityDataColNames
-for (i in 1:replicates) {
-	low.diversity.otu.reps[[i]] <- runReplicate(low.diversity,low.diversity.groups,high.tree)
+for (i in 1:extraReplicates) {
+	low.diversity.otu.reps[[i]] <- runReplicate(low.diversity,low.diversity.groups,high.tree,10)
 	low.diversity.plot.data[i,] <- unlist(data.frame(t(low.diversity.otu.reps[[i]])))
 }
 
@@ -286,8 +296,8 @@ high.diversity.otu.reps <- list()
 #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
 high.diversity.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(high.diversity.plot.data) <- plotDiversityDataColNames
-for (i in 1:replicates) {
-	high.diversity.otu.reps[[i]] <- runReplicate(high.diversity,high.diversity.groups,high.tree)
+for (i in 1:extraReplicates) {
+	high.diversity.otu.reps[[i]] <- runReplicate(high.diversity,high.diversity.groups,high.tree,10)
 	high.diversity.plot.data[i,] <- unlist(data.frame(t(high.diversity.otu.reps[[i]])))
 }
 
@@ -300,7 +310,7 @@ low.high.diversity.diff.otu.reps <- list()
 low.high.diversity.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(low.high.diversity.diff.plot.data) <- plotDiversityDataColNames
 for (i in 1:replicates) {
-	low.high.diversity.diff.otu.reps[[i]] <- runMixedReplicate(low.diversity,high.diversity,low.diversity.groups,high.diversity.groups,high.tree)
+	low.high.diversity.diff.otu.reps[[i]] <- runMixedReplicate(low.diversity,high.diversity,low.diversity.groups,high.diversity.groups,high.tree,10)
 	low.high.diversity.diff.plot.data[i,] <- unlist(data.frame(t(low.high.diversity.diff.otu.reps[[i]])))
 }
 
@@ -310,7 +320,7 @@ high.low.diversity.diff.otu.reps <- list()
 high.low.diversity.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(high.low.diversity.diff.plot.data) <- plotDiversityDataColNames
 for (i in 1:replicates) {
-	high.low.diversity.diff.otu.reps[[i]] <- runMixedReplicate(high.diversity,low.diversity,high.diversity.groups,low.diversity.groups,high.tree)
+	high.low.diversity.diff.otu.reps[[i]] <- runMixedReplicate(high.diversity,low.diversity,high.diversity.groups,low.diversity.groups,high.tree,10)
 	high.low.diversity.diff.plot.data[i,] <- unlist(data.frame(t(high.low.diversity.diff.otu.reps[[i]])))
 }
 
