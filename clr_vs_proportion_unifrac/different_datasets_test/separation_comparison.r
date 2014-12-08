@@ -295,9 +295,24 @@ for (i in 1:replicates) {
 # SHANNON DIVERSITY DIFFERENCE TEST
 
 #low/high diversity (saliva vs. stool)
+low.high.diversity.diff.otu.reps <- list()
+#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+low.high.diversity.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+colnames(low.high.diversity.diff.plot.data) <- plotDiversityDataColNames
+for (i in 1:replicates) {
+	low.high.diversity.diff.otu.reps[[i]] <- runMixedReplicate(low.diversity,high.diversity,low.diversity.groups,high.diversity.groups,high.tree)
+	low.high.diversity.diff.plot.data[i,] <- unlist(data.frame(t(low.high.diversity.diff.otu.reps[[i]])))
+}
 
 #high/low diversity (saliva vs. stool)
-
+high.low.diversity.diff.otu.reps <- list()
+#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+high.low.diversity.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+colnames(high.low.diversity.diff.plot.data) <- plotDiversityDataColNames
+for (i in 1:replicates) {
+	high.low.diversity.diff.otu.reps[[i]] <- runMixedReplicate(high.diversity,low.diversity,high.diversity.groups,low.diversity.groups,high.tree)
+	high.low.diversity.diff.plot.data[i,] <- unlist(data.frame(t(high.low.diversity.diff.otu.reps[[i]])))
+}
 
 
 
