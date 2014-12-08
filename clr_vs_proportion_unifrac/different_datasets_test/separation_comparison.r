@@ -220,11 +220,37 @@ for (i in 1:replicates) {
 
 # SPARSITY DIFFERENCE TEST
 
+#low/med
+sparse.diff.otu.1.reps <- list()
+#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+sparse.diff.otu.1.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+colnames(sparse.diff.otu.1.plot.data) <- plotSparsityDataColNames
+for (i in 1:replicates) {
+	sparse.diff.otu.1.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.0001,high.groups,high.groups,high.tree)
+	sparse.diff.otu.1.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.1.reps[[i]])))
+}
+
+#low/high
+sparse.diff.otu.2.reps <- list()
+#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+sparse.diff.otu.2.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+colnames(sparse.diff.otu.2.plot.data) <- plotSparsityDataColNames
+for (i in 1:replicates) {
+	sparse.diff.otu.2.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.00001,high.groups,high.groups,high.tree)
+	sparse.diff.otu.2.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.2.reps[[i]])))
+}
+
+#med/high
+sparse.diff.otu.3.reps <- list()
+#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+sparse.diff.otu.3.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+colnames(sparse.diff.otu.3.plot.data) <- plotSparsityDataColNames
+for (i in 1:replicates) {
+	sparse.diff.otu.3.reps[[i]] <- runMixedReplicate(sparse.diff.otu.0001,sparse.diff.otu.00001,high.groups,high.groups,high.tree)
+	sparse.diff.otu.3.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.3.reps[[i]])))
+}
+
 #sparsity filter
-#remove all OTUs for which the minimum count is < 30
-# mouth.otu.min <- apply(mouth.otu,2,min)
-# mouth.otu <- mouth.otu[,which(mouth.otu.min) >= 30)]
-# mouth.original <- mouth.original[,which(mouth.otu.min) >= 30)]
 
 
 # SHANNON DIVERSITY TEST
