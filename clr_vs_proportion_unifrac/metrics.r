@@ -180,20 +180,20 @@ getDataSetSep <- function(otu,groups,tree) {
 	#take in otu table, rows are samples, cols are OTUs
 	# return list of 1) unweighted UniFrac 2) weighted UniFrac 3) iUniFrac
 
-	unifrac <- GUniFrac(otu, brazil.tree, alpha = c(1))
+	unifrac <- GUniFrac(otu, tree, alpha = c(1))
 	uwUnifrac <- unifrac$unifrac[,,1]
 	wUnifrac <- unifrac$unifrac[,,3]
-	eUnifrac <- InformationUniFrac(otu, brazil.tree, alpha = c(1))$unifrac[,,1]
+	eUnifrac <- InformationUniFrac(otu, tree, alpha = c(1))$unifrac[,,1]
 
 	uwUnifrac.pcoa <- pcoa(uwUnifrac)
 	wUnifrac.pcoa <- pcoa(wUnifrac)
 	eUnifrac.pcoa <- pcoa(eUnifrac)
 
-	uwUnifrac.sep <- getPCoASep(uwUnifrac.pcoa)
-	wUnifrac.sep <- getPCoASep(wUnifrac.pcoa)
-	eUnifrac.sep <- getPCoASep(eUnifrac.pcoa)
+	uwUnifrac.sep <- getPCoASep(uwUnifrac.pcoa,groups)
+	wUnifrac.sep <- getPCoASep(wUnifrac.pcoa,groups)
+	eUnifrac.sep <- getPCoASep(eUnifrac.pcoa,groups)
 
-	returnList <- data.frame(uwUnifrac.sep,wUnifrac.sep,eUnifrac.sep)
+	returnList <- data.frame(t(uwUnifrac.sep),t(wUnifrac.sep),t(eUnifrac.sep))
 	colnames(returnList) <- c("uwUnifrac","wUnifrac","eUnifrac")
 	return(returnList)
 }
@@ -217,7 +217,7 @@ getPCoASep <- function(pcoa,groups) {
 	diff.123 <- sqrt(diff.12^2 + diff.3^2)
 
 	returnList <- data.frame(c(diff.1,diff.12,diff.123))
-	rownames(returnList) <- c("separationOn1,separationOn12,separationOn123")
+	rownames(returnList) <- c("separationOn1","separationOn12","separationOn123")
 	returnList <- t(returnList)
 	return(returnList)
 }

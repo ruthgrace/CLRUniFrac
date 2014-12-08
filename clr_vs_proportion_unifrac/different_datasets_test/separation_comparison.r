@@ -5,6 +5,12 @@ options(error=recover)
 library(ape)
 library(phangorn)
 
+rootTree <- function(tree) {
+	if (!is.rooted(tree)) {
+		tree <- midpoint(tree)
+	}
+	return(tree)
+}
 
 removeTreeTipLabelSingleQuotes <- function(tree) {
 	tree$tip.label <- gsub("'","",tree$tip.label)
@@ -24,11 +30,11 @@ runReplicate <- function(otu,groups,tree) {
 	group2.rand <- otu[as.integer(sample(group2.indices,nSamples,replace=FALSE)),]
 	
 	#concatenate
-	data <- data.frame(group1.rand,group2.rand)
+	data <- rbind(group1.rand,group2.rand)
 
 	#make groups
-	groups <- c(rep(levels(groups)[1],50),rep(levels(groups)[2],50))
-	return(getDataSetSep(data,groups,tree))
+	newGroups <- c(rep(levels(groups)[1],50),rep(levels(groups)[2],50))
+	return(getDataSetSep(data,newGroups,tree))
 }
 
 #all CLR DIRICHLET commented out while the method is being fixed.
@@ -53,6 +59,11 @@ low.tree <- removeTreeTipLabelSingleQuotes(low.tree)
 med.tree <- removeTreeTipLabelSingleQuotes(med.tree)
 high.tree <- removeTreeTipLabelSingleQuotes(high.tree)
 
+#root tree by midpoint if not rooted
+low.tree <- rootTree(low.tree)
+med.tree <- rootTree(med.tree)
+high.tree <- rootTree(high.tree)
+
 #source("../../CLRUniFrac.R")
 source("../../GUniFrac.R")
 source("../../EntropyUniFrac.R")
@@ -63,7 +74,7 @@ low.data.t <- t(low.data)
 med.data.t <- t(med.data)
 high.data.t <- t(high.data)
 
-#get rid of any OTUs that aren't in the tree (only ___ reads discarded in total)
+#get rid of any OTUs that aren't in the tree (only a couple reads discarded in total)
 low.otu.unordered <- low.data.t[,which(colnames(low.data.t) %in% low.tree$tip.label)]
 med.otu.unordered <- med.data.t[,which(colnames(med.data.t) %in% med.tree$tip.label)]
 high.otu.unordered <- high.data.t[,which(colnames(high.data.t) %in% high.tree$tip.label)]
@@ -86,18 +97,21 @@ transparentdarkorchid <- rgb(darkorchid[1]/255,darkorchid[2]/255,darkorchid[3]/2
 # SEQUENCING DEPTH TEST
 #low
 low.seq.depth.reps <- list()
+#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+low.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 for (i in 1:replicates) {
-	low.seq.depth.reps[[i]] <- runReplicate(low.otu,group,tree)
+	low.seq.depth.reps[[i]] <- runReplicate(low.otu,low.groups,low.tree)
+	low.seq.depth.plot.data[i,]
 }
 #med
 med.seq.depth.reps <- list()
 for (i in 1:replicates) {
-	med.seq.depth.reps[[i]] <- runReplicate(med.otu,group,tree)
+	med.seq.depth.reps[[i]] <- runReplicate(med.otu,med.groups,med.tree)
 }
 #high
 high.seq.depth.reps <- list()
 for (i in 1:replicates) {
-	high.seq.depth.reps[[i]] <- runReplicate(high.otu,group,tree)
+	high.seq.depth.reps[[i]] <- runReplicate(high.otu,high.groups,high.tree)
 }
 
 #plot
