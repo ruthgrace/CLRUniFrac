@@ -207,11 +207,11 @@ getPCoASep <- function(pcoa,groups) {
 
 	group1.2 <- pcoa$vectors[which(groups==levels(groups)[1]),2]
 	group2.2 <- pcoa$vectors[which(groups==levels(groups)[2]),2]
-	diff.2 <- abs(mean(group1.1) - mean(group2.1))/sd(pcoa$vector[,2])
+	diff.2 <- abs(mean(group1.2) - mean(group2.2))/sd(pcoa$vector[,2])
 
 	group1.3 <- pcoa$vectors[which(groups==levels(groups)[1]),3]
 	group2.3 <- pcoa$vectors[which(groups==levels(groups)[2]),3]
-	diff.3 <- abs(mean(group1.1) - mean(group2.1))/sd(pcoa$vector[,3])
+	diff.3 <- abs(mean(group1.3) - mean(group2.3))/sd(pcoa$vector[,3])
 
 	diff.12 <- sqrt((diff.1^2) + (diff.2^2))
 	diff.123 <- sqrt((diff.12^2) + (diff.3^2))
