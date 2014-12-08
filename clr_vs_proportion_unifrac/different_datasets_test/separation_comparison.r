@@ -4,6 +4,7 @@ options(error=recover)
 
 library(ape)
 library(phangorn)
+library(vegan)
 
 rootTree <- function(tree) {
 	if (!is.rooted(tree)) {
@@ -110,6 +111,7 @@ high.otu <- high.otu.unordered[,taxaOrder]
 source("../metrics.r")
 
 replicates <- 5
+extraReplicates <- 10
 
 darkorchid <- col2rgb("darkorchid4")
 transparentdarkorchid <- rgb(darkorchid[1]/255,darkorchid[2]/255,darkorchid[3]/255,0.3)
@@ -121,6 +123,9 @@ plotSeqDepthDataColNames <- paste(pcoaLabels, unifracLabels, sep = ".")
 sparsityLabels <- c(rep("sparsity.001",3),rep("sparsity.0001",3),rep("sparsity.00001",3))
 plotSparsityDataColNames <- paste(sparsityLabels, unifracLabels, sep = ".")
 
+diversityLabels <- c(rep("low.diversity",3),rep("high.diversity",3))
+shortUnifracLabels <- rep(c("uwUnifrac","wUnifrac","iUnifrac"),2)
+plotDiversityDataColNames <- paste(diversityLabels, shortUnifracLabels, sep = ".")
 
 
 # SEQUENCING DEPTH TEST
@@ -250,14 +255,48 @@ for (i in 1:replicates) {
 	sparse.diff.otu.3.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.3.reps[[i]])))
 }
 
-#sparsity filter
-
 
 # SHANNON DIVERSITY TEST
 
+#note that average diversity isn't the same in the different conditions
+#	medians are 6.216 for saliva, 5.624 for stool
+high.otu.diversity <- diversity(high.otu)
+
+#low/high diversity cutoffs set so that there are at least 10 samples in each condition
+#	less samples -> extra replicates
+high.diversity.indices <- which(high.otu.diversity > 6)
+low.diversity.indices <- which(high.otu.diversity < 5.7)
+high.diversity <- high.otu[high.diversity.indices,]
+low.diversity <- high.otu[low.diversity.indices,]
+high.diversity.groups <- high.groups[high.diversity.indices]
+low.diversity.groups <- high.groups[low.diversity.indices]
+
+#low diversity
+low.diversity.otu.reps <- list()
+#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+low.diversity.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+colnames(low.diversity.plot.data) <- plotDiversityDataColNames
+for (i in 1:replicates) {
+	low.diversity.otu.reps[[i]] <- runReplicate(low.diversity,low.diversity.groups,high.tree)
+	low.diversity.plot.data[i,] <- unlist(data.frame(t(low.diversity.otu.reps[[i]])))
+}
+
+#high diversity
+high.diversity.otu.reps <- list()
+#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+high.diversity.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+colnames(high.diversity.plot.data) <- plotDiversityDataColNames
+for (i in 1:replicates) {
+	high.diversity.otu.reps[[i]] <- runReplicate(high.diversity,high.diversity.groups,high.tree)
+	high.diversity.plot.data[i,] <- unlist(data.frame(t(high.diversity.otu.reps[[i]])))
+}
+
+
 # SHANNON DIVERSITY DIFFERENCE TEST
 
+#low/high diversity (saliva vs. stool)
 
+#high/low diversity (saliva vs. stool)
 
 
 
