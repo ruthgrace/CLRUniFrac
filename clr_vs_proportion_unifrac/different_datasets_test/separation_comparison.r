@@ -302,11 +302,8 @@ sparse.diff.otu.1.reps <- list()
 #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
 sparse.diff.otu.1.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(sparse.diff.otu.1.plot.data) <- plotDataColNames
-addedOTUs <- addDisimilarOTUs(sparse.diff.otu.001,sparse.diff.otu.0001,high.tree)
-low.with.med.sparse.otu <- addedOTUs[[1]]
-med.with.low.sparse.otu <- addedOTUs[[2]]
 for (i in 1:replicates) {
-	sparse.diff.otu.1.reps[[i]] <- runMixedReplicate(low.with.med.sparse.otu,med.with.low.sparse.otu,low.groups,med.groups,high.tree,50)
+	sparse.diff.otu.1.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.0001,high.groups,high.groups,high.tree,50)
 	sparse.diff.otu.1.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.1.reps[[i]])))
 }
 
@@ -315,11 +312,8 @@ sparse.diff.otu.2.reps <- list()
 #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
 sparse.diff.otu.2.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(sparse.diff.otu.2.plot.data) <- plotDataColNames
-addedOTUs <- addDisimilarOTUs(sparse.diff.otu.001,sparse.diff.otu.00001,high.tree)
-low.with.high.sparse.otu <- addedOTUs[[1]]
-high.with.low.sparse.otu <- addedOTUs[[2]]
 for (i in 1:replicates) {
-	sparse.diff.otu.2.reps[[i]] <- runMixedReplicate(low.with.high.sparse.otu,high.with.low.sparse.otu,low.groups,high.groups,high.tree,50)
+	sparse.diff.otu.2.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.00001,high.groups,high.groups,high.tree,50)
 	sparse.diff.otu.2.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.2.reps[[i]])))
 }
 
@@ -328,11 +322,8 @@ sparse.diff.otu.3.reps <- list()
 #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
 sparse.diff.otu.3.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(sparse.diff.otu.3.plot.data) <- plotDataColNames
-addedOTUs <- addDisimilarOTUs(sparse.diff.otu.0001,sparse.diff.otu.00001,high.tree)
-med.with.high.sparse.otu <- addedOTUs[[1]]
-high.with.med.sparse.otu <- addedOTUs[[2]]
 for (i in 1:replicates) {
-	sparse.diff.otu.3.reps[[i]] <- runMixedReplicate(med.with.high.sparse.otu,high.with.med.sparse.otu,med.groups,high.groups,high.tree,50)
+	sparse.diff.otu.3.reps[[i]] <- runMixedReplicate(sparse.diff.otu.0001,sparse.diff.otu.00001,high.groups,high.groups,high.tree,50)
 	sparse.diff.otu.3.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.3.reps[[i]])))
 }
 
