@@ -56,12 +56,19 @@ runMixedReplicate <- function(otu1,otu2,groups1,groups2,tree,nSamples) {
 	return(getDataSetSep(data,newGroups,tree))
 }
 
-addDisimilarOTUs <- function(otu1,otu2) {
-	otu1.common.otus <- which(colnames(otu1) %in% colnames(otu2))
-	otu2.common.otus <- which(colnames(otu2) %in% colnames(otu1))
-	otu1.unique.otus <- which(!(colnames(otu1) %in% colnames(otu1)[otu1.common.otus]))
-	otu2.unique.otus <- which(!(colnames(otu2) %in% colnames(otu2)[otu2.common.otus]))
-	otu2.unique.blanks <- otu2[,otu2.unique.otus]
+addDisimilarOTUs <- function(otu1,otu2,tree) {
+	# remove OTUs not in tree
+	otu1.tree.otu <- otu1[,which(colnames(otu1) %in% tree$tip.label)]
+	otu2.tree.otu <- otu2[,which(colnames(otu2) %in% tree$tip.label)]
+
+	# find indices of otus common and unique to both lists
+	otu1.common.otus <- which(colnames(otu1.tree.otu) %in% colnames(otu2.tree.otu))
+	otu2.common.otus <- which(colnames(otu2.tree.otu) %in% colnames(otu1.tree.otu))
+	otu1.unique.otus <- which(!(colnames(otu1.tree.otu) %in% colnames(otu1.tree.otu)[otu1.common.otus]))
+	otu2.unique.otus <- which(!(colnames(otu2.tree.otu) %in% colnames(otu2.tree.otu)[otu2.common.otus]))
+
+	# construct blank otus from otu2 to add to otu1
+	otu2.unique.blanks <- otu2.tree.otu[,otu2.unique.otus]
 	otu2.unique.blanks[,] <- 0
 	if (nrow(otu2)>nrow(otu1)) {
 		otu2.unique.blanks <- otu2.unique.blanks[1:nrow(otu1),]
@@ -69,9 +76,10 @@ addDisimilarOTUs <- function(otu1,otu2) {
 	else {
 		otu2.unique.blanks <- otu2.unique.blanks[c(c(1:nrow(otu2)),rep(1,(nrow(otu1)-nrow(otu2)))),]
 	}
-	newotu1 <- data.frame(otu1,otu2.unique.blanks)
+	newotu1 <- data.frame(otu1.tree.otu,otu2.unique.blanks)
 
-	otu1.unique.blanks <- otu1[,otu1.unique.otus]
+	# construct blank otus from otu1 to add to otu2
+	otu1.unique.blanks <- otu1.tree.otu[,otu1.unique.otus]
 	otu1.unique.blanks[,] <- 0
 	if (nrow(otu1)>nrow(otu2)) {
 		otu1.unique.blanks <- otu1.unique.blanks[1:nrow(otu2),]
@@ -79,7 +87,9 @@ addDisimilarOTUs <- function(otu1,otu2) {
 	else {
 		otu1.unique.blanks <- otu1.unique.blanks[c(c(1:nrow(otu1)),rep(1,(nrow(otu2)-nrow(otu1)))),]
 	}
-	newotu2 <- data.frame(otu2,otu1.unique.blanks[1:nrow(otu2),])
+	newotu2 <- data.frame(otu2.tree.otu,otu1.unique.blanks[1:nrow(otu2),])
+
+	#return both new otu tables
 	returnList <- list()
 	returnList[[1]] <- newotu1
 	returnList[[2]] <- newotu2
@@ -194,26 +204,23 @@ dev.off()
 
 # SEQUENCING DEPTH DIFFERENCE TEST
 
-#add in OTUs 
-
-
 #low/med
 low.seq.depth.diff.reps <- list()
 #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
 low.seq.depth.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(low.seq.depth.diff.plot.data) <- plotDataColNames
-addedOTUs <- addDisimilarOTUs(low.otu,med.otu)
+addedOTUs <- addDisimilarOTUs(low.otu,med.otu,high.tree)
 low.with.med.otu <- addedOTUs[[1]]
 med.with.low.otu <- addedOTUs[[2]]
 for (i in 1:replicates) {
-	low.seq.depth.diff.reps[[i]] <- runMixedReplicate(low.with.med.otu,med.with.low.otu,low.groups,med.groups,med.tree,50)
+	low.seq.depth.diff.reps[[i]] <- runMixedReplicate(low.with.med.otu,med.with.low.otu,low.groups,med.groups,high.tree,50)
 	low.seq.depth.diff.plot.data[i,] <- unlist(data.frame(t(low.seq.depth.diff.reps[[i]])))
 }
 #med/high
 med.seq.depth.diff.reps <- list()
 med.seq.depth.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(med.seq.depth.diff.plot.data) <- plotDataColNames
-addedOTUs <- addDisimilarOTUs(med.otu,high.otu)
+addedOTUs <- addDisimilarOTUs(med.otu,high.otu,high.tree)
 med.with.high.otu <- addedOTUs[[1]]
 high.with.med.otu <- addedOTUs[[2]]
 for (i in 1:replicates) {
@@ -224,7 +231,7 @@ for (i in 1:replicates) {
 high.seq.depth.diff.reps <- list()
 high.seq.depth.diff.plot.data <- data.frame(matrix(nrow=5,ncol=9))
 colnames(high.seq.depth.diff.plot.data) <- plotDataColNames
-addedOTUs <- addDisimilarOTUs(low.otu,high.otu)
+addedOTUs <- addDisimilarOTUs(low.otu,high.otu,high.tree)
 low.with.high.otu <- addedOTUs[[1]]
 high.with.low.otu <- addedOTUs[[2]]
 for (i in 1:replicates) {
