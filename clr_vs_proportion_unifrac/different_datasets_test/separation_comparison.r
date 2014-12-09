@@ -56,6 +56,26 @@ runMixedReplicate <- function(otu1,otu2,groups1,groups2,tree,nSamples) {
 	return(getDataSetSep(data,newGroups,tree))
 }
 
+addDisimilarOTUs <- function(otu1,otu2) {
+	otu1.common.otus <- which(colnames(otu1) %in% colnames(otu2))
+	otu2.common.otus <- which(colnames(otu2) %in% colnames(otu1))
+	otu1.unique.otus <- which(!(colnames(otu1) %in% colnames(otu1)[otu1.common.otus]))
+	otu2.unique.otus <- which(!(colnames(otu2) %in% colnames(otu1)[otu2.common.otus]))
+
+	otu1.unique.blanks <- otu1[,otu1.unique.otus]
+	otu1.unique.blanks[,] <- 0
+	newotu1 <- data.frame(otu1,otu1.unique.blanks)
+
+	otu2.unique.blanks <- otu2[,otu2.unique.otus]
+	otu2.unique.blanks[,] <- 0
+	newotu2 <- data.frame(otu2,otu2.unique.blanks)
+
+	returnList <- list()
+	returnList[[1]] <- newotu1
+	returnList[[2]] <- newotu2
+	return(returnList)
+}
+
 #all CLR DIRICHLET commented out while the method is being fixed.
 #attempt at sparsity filter instead -- 30 counts minimum is what is stable
 
@@ -163,6 +183,10 @@ dev.off()
 
 
 # SEQUENCING DEPTH DIFFERENCE TEST
+
+#add in OTUs 
+
+
 #low/med
 low.seq.depth.diff.reps <- list()
 #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
