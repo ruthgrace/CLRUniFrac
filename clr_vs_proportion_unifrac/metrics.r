@@ -197,6 +197,53 @@ getDataSetSep <- function(otu,groups,tree) {
 	return(returnList)
 }
 
+getScreePlotData <- function(pcoa){
+	varExplained <- sum(apply(pcoa$vector,2,function(x) sd(x)*sd(x)))
+	varExplainedByComponent <- apply(pcoa$vector,2,function(x) sd(x)*sd(x)/varExplained)
+	return(varExplainedByComponent)
+}
+
+getMeanDistanceWithErrorData <- function(pcoa,groups) {
+	groups <- as.factor(groups)
+	#given pcoa and metadata
+	# returns separations on axis 1, 1&2, 1&2&3
+	group1.1 <- pcoa$vectors[which(groups==levels(groups)[1]),1]
+	group2.1 <- pcoa$vectors[which(groups==levels(groups)[2]),1]
+	diff.1 <- abs(mean(group1.1) - mean(group2.1))
+	sd.1 <- sd(pcoa$vector[,1])
+
+	group1.2 <- pcoa$vectors[which(groups==levels(groups)[1]),2]
+	group2.2 <- pcoa$vectors[which(groups==levels(groups)[2]),2]
+	diff.2 <- abs(mean(group1.2) - mean(group2.2))
+	sd.2 <- sd(pcoa$vector[,2])
+
+	group1.3 <- pcoa$vectors[which(groups==levels(groups)[1]),3]
+	group2.3 <- pcoa$vectors[which(groups==levels(groups)[2]),3]
+	diff.3 <- abs(mean(group1.3) - mean(group2.3))
+	sd.3 <- sd(pcoa$vector[,3])
+
+	diff.12 <- sqrt((diff.1^2) + (diff.2^2))
+	diff.123 <- sqrt((diff.12^2) + (diff.3^2))
+
+	diff.12.uncondensed <- sqrt(pcoa$vector[,1]^2 + pcoa$vector[,2]^2)
+	diff.123.uncondensed <- sqrt(diff.12.uncondensed^2 + pcoa$vector[,3]^2)
+	sd.12 <- sd(diff.12.uncondensed)
+	sd.123 <- sd(diff.123.uncondensed)
+
+	returnList <- list()
+
+	separation <- data.frame(c(diff.1,diff.12,diff.123))
+	rownames(separation) <- c("separationOn1","separationOn12","separationOn123")
+	separation <- t(separation)
+	returnList[[1]] <- separation
+
+	error <- data.frame(c(sd.1,sd.12,sd.123))
+	rownames(error) <- c("standardDeviationOn1","standardDeviationOn12","standardDeviationOn123")
+	error <- t(error)
+	returnList[[2]] <- error
+	return(returnList)
+}
+
 getPCoASep <- function(pcoa,groups) {
 	groups <- as.factor(groups)
 	#given pcoa and metadata
