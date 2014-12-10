@@ -2,7 +2,7 @@ options(error=recover)
 
 otuFile <- "td_OTU_tag_mapped_lineage.txt"
 treeFile <- "fasttree_all_seed_OTUs.tre"
-metaDataFile <- 
+metaDataFile <- "metadata.txt"
 
 
 library(ape)
@@ -47,8 +47,14 @@ wUnifrac <- gUnifrac$unifrac[,,1]
 uwUnifrac <- gUnifrac$unifrac[,,3]
 eUnifrac <- InformationUniFrac(otu.tab, tree, alpha = c(1))$unifrac[,,1]
 
-groups <- MyMetaOrdered$n_status #levels bv, i, n
+groups <- MyMetaOrdered$Age #levels bv, i, n
 originalgroups <- groups
+
+groups[which(groups<=17)] <- 1
+groups[which(groups>17)] <- 2
+groups <- as.factor(groups)
+
+otuSum <- apply(otu.tab,1,sum)
 
 # caculate pcoa vectors
 wUnifrac.pcoa <- pcoa(wUnifrac)
@@ -119,7 +125,7 @@ eUnifrac.dendo <- hclust(eUnifrac.dist, method="average")
 otu.prop <- t(apply(otu.tab,1,function(x) x/sum(x)))
 
 #save plots as PDF
-pdf("test_plots_with_brazil_study_data_no_bar_plots.pdf")
+pdf("general_test_plots.pdf")
 
 #plot dendogram with bar plots
 
@@ -198,22 +204,18 @@ abline(fit <- lm(avg.vector ~ eUnifrac.vector),col="darkorchid4")
 print("clr vs overlap")
 print(summary(fit)$r.squared)
 
-#plot(clrDirichletUniFrac.vector,avg.vector,main="clr dirichlet vs avg")
-#lines(lowess(clrDirichletUniFrac.vector,avg.vector), col="yellow") # lowess line (x,y)
 
 
 #plot pcoa plots with legend
 plot(wUnifrac.pcoa$vectors[,1],wUnifrac.pcoa$vectors[,2], type="p",col=groups,main="weighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(wUnifrac.pc1.varEx,digits=3),"variance explained"),ylab=paste("Second Component", round(wUnifrac.pc2.varEx,digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
-legend(1.0,1.5,levels(taxonomyGroups),col=palette(),pch=19)
+legend(1.0,1.5,levels(groups),col=palette(),pch=19)
 
 plot(uwUnifrac.pcoa$vectors[,1],uwUnifrac.pcoa$vectors[,2], col=groups,main="unweighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(uwUnifrac.pc1.varEx,digits=3),"variance explained"),ylab=paste("Second Component", round(uwUnifrac.pc2.varEx,digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
-legend(0.2,0.3,levels(taxonomyGroups),col=palette(),pch=19)
+legend(0.2,0.3,levels(groups),col=palette(),pch=19)
 
 plot(eUnifrac.pcoa$vectors[,1],eUnifrac.pcoa$vectors[,2], col=groups,main="Entropy weighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(eUnifrac.pc1.varEx,digits=3),"variance explained"),ylab=paste("Second Component", round(eUnifrac.pc2.varEx,digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
-legend(0.2,0.3,levels(taxonomyGroups),col=palette(),pch=19)
+legend(0.2,0.3,levels(groups),col=palette(),pch=19)
 
-#plot(clrDirichletUniFrac.pcoa$vectors[,1],clrDirichletUniFrac.pcoa$vectors[,2], col=groups,main="clr dirichlet unifrac",xlab=paste("First Component", clrDirichletUniFrac.pc1.varEx,"variance explained"),ylab=paste("Second Component", clrDirichletUniFrac.pc2.varEx,"variance explained"))
-#legend(0.1,0.3,levels(taxonomyGroups),col=palette(),pch=1)
 
 
 plot(wUnifrac.vector,uwUnifrac.vector,main="weighted unifrac vs unweighted unifrac")
