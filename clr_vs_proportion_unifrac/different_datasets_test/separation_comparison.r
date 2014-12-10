@@ -163,6 +163,10 @@ pcoaText <- c(rep("PCoA first component",3),rep("PCoA first 2 components",3),rep
 unifracText <- rep(c("Unweighted UniFrac","Weighted UniFrac","Information UniFrac"),3)
 plotDataTextLabels <- paste(unifracText,pcoaText, sep = "\n")
 
+screeText <- paste("Axis",rep(c(1:5),3))
+screeUnifracTest <- rep(c("Unweighted UniFrac","Weighted UniFrac","Information UniFrac"),5)
+screeLabels <- paste(screeUnifracTest,screeText)
+
 # sparsityLabels <- c(rep("sparsity.001",3),rep("sparsity.0001",3),rep("sparsity.00001",3))
 # plotSparsityDataColNames <- paste(sparsityLabels, unifracLabels, sep = ".")
 
@@ -377,11 +381,16 @@ colnames(sparse.otu.001.dist) <- plotDataTextLabels
 sparse.otu.001.sd <- data.frame(matrix(nrow=5,ncol=9))
 colnames(sparse.otu.001.sd) <- plotDataTextLabels
 
+sparse.otu.001.scree <- data.frame(matrix(nrow=5,ncol=15))
+colnames(sparse.otu.001.scree) <- screeLabels
+
+
 for (i in 1:replicates) {
 	sparse.otu.001.reps[[i]] <- runReplicate(sparse.otu.001,high.groups,high.tree,50)
 	sparse.otu.001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.001.reps[[i]]$effect)))
 	sparse.otu.001.dist[i,] <- c(sparse.otu.001.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.otu.001.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.otu.001.reps[[i]]$meanDist.SD[[3]]$meanDist)
 	sparse.otu.001.sd[i,] <- c(sparse.otu.001.reps[[i]]$meanDist.SD[[1]]$error,sparse.otu.001.reps[[i]]$meanDist.SD[[2]]$error,sparse.otu.001.reps[[i]]$meanDist.SD[[3]]$error)
+	sparse.otu.001.scree[i,] <- c(sparse.otu.001.reps[[i]]$screeData$uwUnifrac[1:5],sparse.otu.001.reps[[i]]$screeData$wUnifrac[1:5],sparse.otu.001.reps[[i]]$screeData$eUnifrac[1:5])
 }
 
 #0.01% sparsity filter
@@ -459,6 +468,13 @@ segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd,
 segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
 
 par(originalPar)
+
+screePlotData <- apply(sparse.otu.001.scree,2,mean)
+screePlotError <- apply(sparse.otu.001.scree,2,sd)
+myBarPlot <- barplot(screePlotData,col=transparentdarkorchid,las=2,ylim=c(0,1),ylab="Variation explained by each axis of PCoA",main="Sparsity filter at 0.1%")
+segments(myBarPlot, screePlotData - screePlotError, myBarPlot, screePlotData + screePlotError, lwd=2)
+segments(myBarPlot - 0.1, screePlotData - screePlotError, myBarPlot + 0.1, screePlotData - screePlotError, lwd=2)
+segments(myBarPlot - 0.1, screePlotData + screePlotError, myBarPlot + 0.1, screePlotData + screePlotError, lwd=2)
 
 
 dev.off()
