@@ -219,15 +219,19 @@ getAllPcoaMetrics <- function(otu,groups,tree) {
 	wUnifrac.meanDist <- getMeanDistanceWithErrorData(wUnifrac.pcoa,groups)
 	eUnifrac.meanDist <- getMeanDistanceWithErrorData(eUnifrac.pcoa,groups)
 
-	returnList$meanDist.SD <- data.frame(t(uwUnifrac.meanDist),t(wUnifrac.meanDist),t(eUnifrac.meanDist))
-	colnames(returnList$meanDist.SD) <- c("uwUnifrac","wUnifrac","eUnifrac")
+	returnList$meanDist.SD <- list()
+	returnList$meanDist.SD$uwUnifrac <- uwUnifrac.meanDist
+	returnList$meanDist.SD$wUnifrac <- wUnifrac.meanDist
+	returnList$meanDist.SD$eUnifrac <- eUnifrac.meanDist
 
 	uwUnifrac.screeData <- 	getScreePlotData(uwUnifrac.pcoa)
 	wUnifrac.screeData <- 	getScreePlotData(wUnifrac.pcoa)
 	eUnifrac.screeData <- 	getScreePlotData(eUnifrac.pcoa)
 
-	returnList$screeData <- data.frame(uwUnifrac.screeData,wUnifrac.screeData,eUnifrac.screeData)
-	colnames(returnList$screeData) <- c("uwUnifrac","wUnifrac","eUnifrac")
+	returnList$screeData <- list()
+	returnList$screeData$uwUnifrac <- uwUnifrac.screeData
+	returnList$screeData$wUnifrac <- wUnifrac.screeData
+	returnList$screeData$eUnifrac <- eUnifrac.screeData
 
 	returnList$pcoa <- list()
 	returnList$pcoa$uwUnifrac <- uwUnifrac.pcoa

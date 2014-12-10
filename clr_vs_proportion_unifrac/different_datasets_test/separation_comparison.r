@@ -6,6 +6,9 @@ library(ape)
 library(phangorn)
 library(vegan)
 
+originalPar <- par()
+par(xaxt="n")
+
 rootTree <- function(tree) {
 	if (!is.rooted(tree)) {
 		tree <- midpoint(tree)
@@ -37,9 +40,7 @@ runReplicate <- function(otu,groups,tree,nSamples) {
 	return(getAllPcoaMetrics(data,newGroups,tree))
 }
 
-runMixedReplicate <- function(otu1,otu2,groups1,groups2,tree,nSamples) {
-	
-	
+runMixedReplicate <- function(otu1,otu2,groups1,groups2,tree,nSamples) {	
 	#sample 50 samples from condition 1,group1
 	group1.indices <- which(groups1==levels(groups1)[1])
 	group1.rand <- otu1[as.integer(sample(group1.indices,nSamples,replace=FALSE)),]
@@ -283,6 +284,10 @@ for (i in 1:replicates) {
 	sparse.otu.00001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.00001.reps[[i]]$effect)))
 }
 
+
+
+##### NEED TO MAKE AXIS LOOK RIGHT + plot other stuff
+
 pdf("sparsityTestPlots.pdf")
 stripchart(sparse.otu.001.plot.data,vertical=TRUE,main="sparsity filter at 0.1%",group.names=colnames(sparse.otu.001.plot.data),pch=19,col=transparentdarkorchid)
 stripchart(sparse.otu.0001.plot.data,vertical=TRUE,main="sparsity filter at 0.01%",group.names=colnames(sparse.otu.0001.plot.data),pch=19,col=transparentdarkorchid)
@@ -402,7 +407,7 @@ stripchart(low.high.diversity.diff.plot.data,vertical=TRUE,main="saliva diversit
 stripchart(high.low.diversity.diff.plot.data,vertical=TRUE,main="stool diversity < 5.7 vs. saliva diversity > 6.1",group.names=colnames(high.low.diversity.diff.plot.data),pch=19,col=transparentdarkorchid)
 dev.off()
 
-
+par(originalPar)
 
 
 
