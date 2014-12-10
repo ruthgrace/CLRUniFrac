@@ -228,6 +228,12 @@ getAllPcoaMetrics <- function(otu,groups,tree) {
 
 	returnList$screeData <- data.frame(uwUnifrac.screeData,wUnifrac.screeData,eUnifrac.screeData)
 	colnames(returnList$screeData) <- c("uwUnifrac","wUnifrac","eUnifrac")
+
+	returnList$pcoa <- list()
+	returnList$pcoa$uwUnifrac <- uwUnifrac.pcoa
+	returnList$pcoa$wUnifrac <- wUnifrac.pcoa
+	returnList$pcoa$eUnifrac <- eUnifrac.pcoa
+
 	return(returnList)
 }
 
