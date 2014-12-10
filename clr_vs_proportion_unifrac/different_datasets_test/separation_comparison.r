@@ -189,6 +189,8 @@ for (i in 1:replicates) {
 	low.seq.depth.dist[i,] <- c(low.seq.depth.reps[[i]]$meanDist.SD[[1]]$meanDist,low.seq.depth.reps[[i]]$meanDist.SD[[2]]$meanDist,low.seq.depth.reps[[i]]$meanDist.SD[[3]]$meanDist)
 	low.seq.depth.sd[i,] <- c(low.seq.depth.reps[[i]]$meanDist.SD[[1]]$error,low.seq.depth.reps[[i]]$meanDist.SD[[2]]$error,low.seq.depth.reps[[i]]$meanDist.SD[[3]]$error)
 }
+
+
 #med
 med.seq.depth.reps <- list()
 med.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
@@ -234,22 +236,22 @@ par(originalPar)
 
 par(mar=c(13, 6, 4, 2) + 0.1)
 
-meanDist <- unlist(lapply(sparse.otu.001.dist,mean))
-meanSd <- unlist(lapply(sparse.otu.001.sd,mean))
+meanDist <- unlist(lapply(low.seq.depth.dist,mean))
+meanSd <- unlist(lapply(low.seq.depth.sd,mean))
 myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sequencing depth < 3000 reads/sample")
 segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
 segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
 segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
 
-meanDist <- unlist(lapply(sparse.otu.001.dist,mean))
-meanSd <- unlist(lapply(sparse.otu.001.sd,mean))
+meanDist <- unlist(lapply(med.seq.depth.dist,mean))
+meanSd <- unlist(lapply(med.seq.depth.sd,mean))
 myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sequencing depth 3000-6000 reads/sample")
 segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
 segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
 segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
 
-meanDist <- unlist(lapply(sparse.otu.001.dist,mean))
-meanSd <- unlist(lapply(sparse.otu.001.sd,mean))
+meanDist <- unlist(lapply(high.seq.depth.dist,mean))
+meanSd <- unlist(lapply(high.seq.depth.sd,mean))
 myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sequencing depth > 6000 reads/sample")
 segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
 segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
