@@ -1,8 +1,8 @@
 options(error=recover)
 
-otuFile <- 
+otuFile <- "td_OTU_tag_mapped_lineage.txt"
+treeFile <- "fasttree_all_seed_OTUs.tre"
 metaDataFile <- 
-treeFile <- 
 
 
 library(ape)
@@ -16,7 +16,7 @@ source("../../GUniFrac.R")
 source("../../EntropyUniFrac.R")
 
 # read OTU table and format appropriately for input into UniFrac methods
-otu.tab <- read.table(otuFile, header=T, sep="\t", row.names=1, comment.char="", check.names=FALSE)
+otu.tab <- read.table(otuFile, header=T, sep="\t", row.names=1, check.names=FALSE)
 
 #remove taxonomy column to make otu count matrix numeric
 taxonomy <- otu.tab$taxonomy

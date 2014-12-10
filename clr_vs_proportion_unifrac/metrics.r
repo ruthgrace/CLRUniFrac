@@ -197,6 +197,40 @@ getDataSetSep <- function(otu,groups,tree) {
 	return(returnList)
 }
 
+getAllPcoaMetrics <- function(otu,groups,tree) {
+	unifrac <- GUniFrac(otu, tree, alpha = c(1))
+	uwUnifrac <- unifrac$unifrac[,,1]
+	wUnifrac <- unifrac$unifrac[,,3]
+	eUnifrac <- InformationUniFrac(otu, tree, alpha = c(1))$unifrac[,,1]
+
+	uwUnifrac.pcoa <- pcoa(uwUnifrac)
+	wUnifrac.pcoa <- pcoa(wUnifrac)
+	eUnifrac.pcoa <- pcoa(eUnifrac)
+
+	uwUnifrac.sep <- getPCoASep(uwUnifrac.pcoa,groups)
+	wUnifrac.sep <- getPCoASep(wUnifrac.pcoa,groups)
+	eUnifrac.sep <- getPCoASep(eUnifrac.pcoa,groups)
+
+	returnList <- list()
+	returnList$effect <- data.frame(t(uwUnifrac.sep),t(wUnifrac.sep),t(eUnifrac.sep))
+	colnames(returnList$effect) <- c("uwUnifrac","wUnifrac","eUnifrac")
+
+	uwUnifrac.meanDist <- getMeanDistanceWithErrorData(uwUnifrac.pcoa,groups)
+	wUnifrac.meanDist <- getMeanDistanceWithErrorData(wUnifrac.pcoa,groups)
+	eUnifrac.meanDist <- getMeanDistanceWithErrorData(eUnifrac.pcoa,groups)
+
+	returnList$meanDist.SD <- data.frame(t(uwUnifrac.meanDist),t(wUnifrac.meanDist),t(eUnifrac.meanDist))
+	colnames(returnList$meanDist.SD) <- c("uwUnifrac","wUnifrac","eUnifrac")
+
+	uwUnifrac.screeData <- 	getScreePlotData(uwUnifrac.pcoa)
+	wUnifrac.screeData <- 	getScreePlotData(wUnifrac.pcoa)
+	eUnifrac.screeData <- 	getScreePlotData(eUnifrac.pcoa)
+
+	returnList$screeData <- data.frame(uwUnifrac.screeData,wUnifrac.screeData,eUnifrac.screeData)
+	colnames(returnList$screeData) <- c("uwUnifrac","wUnifrac","eUnifrac")
+	return(returnList)
+}
+
 getScreePlotData <- function(pcoa){
 	varExplained <- sum(apply(pcoa$vector,2,function(x) sd(x)*sd(x)))
 	varExplainedByComponent <- apply(pcoa$vector,2,function(x) sd(x)*sd(x)/varExplained)
@@ -235,12 +269,12 @@ getMeanDistanceWithErrorData <- function(pcoa,groups) {
 	separation <- data.frame(c(diff.1,diff.12,diff.123))
 	rownames(separation) <- c("separationOn1","separationOn12","separationOn123")
 	separation <- t(separation)
-	returnList[[1]] <- separation
+	returnList$meanDist <- separation
 
 	error <- data.frame(c(sd.1,sd.12,sd.123))
 	rownames(error) <- c("standardDeviationOn1","standardDeviationOn12","standardDeviationOn123")
 	error <- t(error)
-	returnList[[2]] <- error
+	returnList$error <- error
 	return(returnList)
 }
 
