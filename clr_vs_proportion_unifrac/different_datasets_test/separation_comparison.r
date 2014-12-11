@@ -97,6 +97,91 @@ addDisimilarOTUs <- function(otu1,otu2,tree) {
 	return(returnList)
 }
 
+compare <- function(replicateMethod, otuList, groupList, comparisonList, tree, comparisonTitleList, fileName, nSamples) {
+	pdf(fileName)
+
+	for (i in 1:length(comparisonList)) {
+		compare <- comparisonList[[i]]
+		index1 <- compare[1]
+		otu1 <- otuList[[index1]]
+		group1 <- groupList[[index1]]
+		plotTitle <- comparisonTitleList[i]
+		if (identical(replicateMethod,runReplicate)) {
+			getReplicate(replicateMethod,otu1,group1,tree,plotTitle,nSamples)
+		}
+		else {
+			index2 <- compare[2]
+			otu2 <- otuList[[index2]]
+			group2 <- groupList[[index2]]
+			getReplicate(replicateMethod,otu1,group1,tree,plotTitle,nSamples,group2=group2,otu2=otu2)
+		}
+	}
+
+	dev.off()
+
+}
+
+getReplicate <- function(replicateMethod,otu1,group1,tree,plotTitle,nSamplesgroup2=NULL,otu2=NULL) {
+	#do comparisons
+	reps <- list()
+	#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+	plot.data <- data.frame(matrix(nrow=5,ncol=9))
+	colnames(plot.data) <- plotDataTextLabels
+
+	dist <- data.frame(matrix(nrow=5,ncol=9))
+	colnames(dist) <- plotDataTextLabels
+	sd <- data.frame(matrix(nrow=5,ncol=9))
+	colnames(sd) <- plotDataTextLabels
+
+	scree <- data.frame(matrix(nrow=5,ncol=15))
+	colnames(scree) <- screeLabels
+
+
+	for (i in 1:replicates) {
+		if (identical(replicateMethod,runReplicate)) {
+			reps[[i]] <- runReplicate(otu1,group1,tree,nSamples)
+		}
+		else {
+			reps[[i]] <- runMixedReplicate(otu1,otu2,group1,group2,tree,nSamples)
+		}
+		plot.data[i,] <- unlist(data.frame(t(reps[[i]]$effect)))
+		dist[i,] <- c(reps[[i]]$meanDist.SD[[1]]$meanDist,reps[[i]]$meanDist.SD[[2]]$meanDist,reps[[i]]$meanDist.SD[[3]]$meanDist)
+		sd[i,] <- c(reps[[i]]$meanDist.SD[[1]]$error,reps[[i]]$meanDist.SD[[2]]$error,reps[[i]]$meanDist.SD[[3]]$error)
+		scree[i,] <- c(reps[[i]]$screeData$uwUnifrac[1:5],reps[[i]]$screeData$wUnifrac[1:5],reps[[i]]$screeData$eUnifrac[1:5])
+	}
+
+	#make plots
+
+	pdf("sparsityTestPlots.pdf")
+	par(mar=c(13, 4, 4, 2) + 0.1)
+	par(cex.lab=1.3)
+	par(cex.main=1.5)
+	stripchart(plot.data,vertical=TRUE,main="Sparsity filter at 0.1%",group.names=colnames(plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+	par(originalPar)
+
+	par(mar=c(13, 6, 4, 2) + 0.1)
+
+	meanDist <- unlist(lapply(dist,mean))
+	meanSd <- unlist(lapply(sd,mean))
+	myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.1%")
+	segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+	segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+	segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+
+	par(originalPar)
+
+	screePlotData <- apply(scree,2,mean)
+	screePlotError <- apply(scree,2,sd)
+	myBarPlot <- barplot(screePlotData,col=transparentdarkorchid,las=2,ylim=c(0,1),ylab="Variation explained by each axis of PCoA",main="Sparsity filter at 0.1%")
+	segments(myBarPlot, screePlotData - screePlotError, myBarPlot, screePlotData + screePlotError, lwd=2)
+	segments(myBarPlot - 0.1, screePlotData - screePlotError, myBarPlot + 0.1, screePlotData - screePlotError, lwd=2)
+	segments(myBarPlot - 0.1, screePlotData + screePlotError, myBarPlot + 0.1, screePlotData + screePlotError, lwd=2)
+
+	par(originalPar)
+	# return replicate
+	return(reps)
+}
+
 #all CLR DIRICHLET commented out while the method is being fixed.
 #attempt at sparsity filter instead -- 30 counts minimum is what is stable
 
@@ -365,119 +450,141 @@ par(originalPar)
 dev.off()
 
 # SPARSITY TEST
+
 #remove OTUs rarer than a thresh hold throughout all samples
 high.otu.sum <- apply(high.otu,2,sum)
 high.total.sum <- sum(high.otu)
 
-#0.1% sparsity filter
-sparse.otu.001 <- high.otu[,(which(high.otu.sum >= (0.001*high.total.sum)))]
-sparse.otu.001.reps <- list()
-#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
-sparse.otu.001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.otu.001.plot.data) <- plotDataTextLabels
+sparse <- list()
 
-sparse.otu.001.dist <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.otu.001.dist) <- plotDataTextLabels
-sparse.otu.001.sd <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.otu.001.sd) <- plotDataTextLabels
+sparse$otu.001 <- high.otu[,(which(high.otu.sum >= (0.001*high.total.sum)))]
+sparse$otu.0001 <- high.otu[,(which(high.otu.sum >= (0.0001*high.total.sum)))]
+sparse$otu.00001 <- high.otu[,(which(high.otu.sum >= (0.00001*high.total.sum)))]
 
-sparse.otu.001.scree <- data.frame(matrix(nrow=5,ncol=15))
-colnames(sparse.otu.001.scree) <- screeLabels
+sparse.groups <- list()
+sparse.groups[[1]] <- sparse.groups[[2]] <- sparse.groups[[3]] <- high.groups
 
+selfComparisonList <- list()
+selfComparisonList[[1]] <- c(1)
+selfComparisonList[[2]] <- c(2)
+selfComparisonList[[3]] <- c(3)
 
-for (i in 1:replicates) {
-	sparse.otu.001.reps[[i]] <- runReplicate(sparse.otu.001,high.groups,high.tree,50)
-	sparse.otu.001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.001.reps[[i]]$effect)))
-	sparse.otu.001.dist[i,] <- c(sparse.otu.001.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.otu.001.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.otu.001.reps[[i]]$meanDist.SD[[3]]$meanDist)
-	sparse.otu.001.sd[i,] <- c(sparse.otu.001.reps[[i]]$meanDist.SD[[1]]$error,sparse.otu.001.reps[[i]]$meanDist.SD[[2]]$error,sparse.otu.001.reps[[i]]$meanDist.SD[[3]]$error)
-	sparse.otu.001.scree[i,] <- c(sparse.otu.001.reps[[i]]$screeData$uwUnifrac[1:5],sparse.otu.001.reps[[i]]$screeData$wUnifrac[1:5],sparse.otu.001.reps[[i]]$screeData$eUnifrac[1:5])
-}
+comparisonTitleList <- c("Sparsity filter at 0.1%","Sparsity filter at 0.01%","Sparsity filter at 0.001%")
+fileName <- "sparsityTestPlots.pdf"
+nSamples <- 50
 
-#0.01% sparsity filter
-sparse.otu.0001 <- high.otu[,(which(high.otu.sum >= (0.0001*high.total.sum)))]
-sparse.otu.0001.reps <- list()
-#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
-sparse.otu.0001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.otu.0001.plot.data) <- plotDataTextLabels
-
-sparse.otu.0001.dist <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.otu.0001.dist) <- plotDataTextLabels
-sparse.otu.0001.sd <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.otu.0001.sd) <- plotDataTextLabels
-
-for (i in 1:replicates) {
-	sparse.otu.0001.reps[[i]] <- runReplicate(sparse.otu.0001,high.groups,high.tree,50)
-	sparse.otu.0001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.0001.reps[[i]]$effect)))
-	sparse.otu.0001.dist[i,] <- c(sparse.otu.0001.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.otu.0001.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.otu.0001.reps[[i]]$meanDist.SD[[3]]$meanDist)
-	sparse.otu.0001.sd[i,] <- c(sparse.otu.0001.reps[[i]]$meanDist.SD[[1]]$error,sparse.otu.0001.reps[[i]]$meanDist.SD[[2]]$error,sparse.otu.0001.reps[[i]]$meanDist.SD[[3]]$error)
-}
-
-#0.001% sparsity filter
-sparse.otu.00001 <- high.otu[,(which(high.otu.sum >= (0.00001*high.total.sum)))]
-sparse.otu.00001.reps <- list()
-#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
-sparse.otu.00001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.otu.00001.plot.data) <- plotDataTextLabels
-
-sparse.otu.00001.dist <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.otu.00001.dist) <- plotDataTextLabels
-sparse.otu.00001.sd <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.otu.00001.sd) <- plotDataTextLabels
-
-for (i in 1:replicates) {
-	sparse.otu.00001.reps[[i]] <- runReplicate(sparse.otu.00001,high.groups,high.tree,50)
-	sparse.otu.00001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.00001.reps[[i]]$effect)))
-	sparse.otu.00001.dist[i,] <- c(sparse.otu.00001.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.otu.00001.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.otu.00001.reps[[i]]$meanDist.SD[[3]]$meanDist)
-	sparse.otu.00001.sd[i,] <- c(sparse.otu.00001.reps[[i]]$meanDist.SD[[1]]$error,sparse.otu.00001.reps[[i]]$meanDist.SD[[2]]$error,sparse.otu.00001.reps[[i]]$meanDist.SD[[3]]$error)
-}
+compare(runReplicate, sparse, sparse.groups, selfComparisonList, high.tree, comparisonTitleList, fileName, nSamples)
 
 
+# #0.1% sparsity filter
+# sparse.otu.001 <- high.otu[,(which(high.otu.sum >= (0.001*high.total.sum)))]
+# sparse.otu.001.reps <- list()
+# #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+# sparse.otu.001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.otu.001.plot.data) <- plotDataTextLabels
 
-##### NEED TO MAKE AXIS LOOK RIGHT + plot other stuff
+# sparse.otu.001.dist <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.otu.001.dist) <- plotDataTextLabels
+# sparse.otu.001.sd <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.otu.001.sd) <- plotDataTextLabels
 
-pdf("sparsityTestPlots.pdf")
-par(mar=c(13, 4, 4, 2) + 0.1)
-par(cex.lab=1.3)
-par(cex.main=1.5)
-stripchart(sparse.otu.001.plot.data,vertical=TRUE,main="Sparsity filter at 0.1%",group.names=colnames(sparse.otu.001.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
-stripchart(sparse.otu.0001.plot.data,vertical=TRUE,main="Sparsity filter at 0.01%",group.names=colnames(sparse.otu.0001.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
-stripchart(sparse.otu.00001.plot.data,vertical=TRUE,main="sparsity filter at 0.001%",group.names=colnames(sparse.otu.00001.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
-par(originalPar)
-
-par(mar=c(13, 6, 4, 2) + 0.1)
-
-meanDist <- unlist(lapply(sparse.otu.001.dist,mean))
-meanSd <- unlist(lapply(sparse.otu.001.sd,mean))
-myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.1%")
-segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
-
-meanDist <- unlist(lapply(sparse.otu.0001.dist,mean))
-meanSd <- unlist(lapply(sparse.otu.0001.sd,mean))
-myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.01%")
-segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
-
-meanDist <- unlist(lapply(sparse.otu.00001.dist,mean))
-meanSd <- unlist(lapply(sparse.otu.00001.sd,mean))
-myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.001%")
-segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
-
-par(originalPar)
-
-screePlotData <- apply(sparse.otu.001.scree,2,mean)
-screePlotError <- apply(sparse.otu.001.scree,2,sd)
-myBarPlot <- barplot(screePlotData,col=transparentdarkorchid,las=2,ylim=c(0,1),ylab="Variation explained by each axis of PCoA",main="Sparsity filter at 0.1%")
-segments(myBarPlot, screePlotData - screePlotError, myBarPlot, screePlotData + screePlotError, lwd=2)
-segments(myBarPlot - 0.1, screePlotData - screePlotError, myBarPlot + 0.1, screePlotData - screePlotError, lwd=2)
-segments(myBarPlot - 0.1, screePlotData + screePlotError, myBarPlot + 0.1, screePlotData + screePlotError, lwd=2)
+# sparse.otu.001.scree <- data.frame(matrix(nrow=5,ncol=15))
+# colnames(sparse.otu.001.scree) <- screeLabels
 
 
-dev.off()
+# for (i in 1:replicates) {
+# 	sparse.otu.001.reps[[i]] <- runReplicate(sparse.otu.001,high.groups,high.tree,50)
+# 	sparse.otu.001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.001.reps[[i]]$effect)))
+# 	sparse.otu.001.dist[i,] <- c(sparse.otu.001.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.otu.001.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.otu.001.reps[[i]]$meanDist.SD[[3]]$meanDist)
+# 	sparse.otu.001.sd[i,] <- c(sparse.otu.001.reps[[i]]$meanDist.SD[[1]]$error,sparse.otu.001.reps[[i]]$meanDist.SD[[2]]$error,sparse.otu.001.reps[[i]]$meanDist.SD[[3]]$error)
+# 	sparse.otu.001.scree[i,] <- c(sparse.otu.001.reps[[i]]$screeData$uwUnifrac[1:5],sparse.otu.001.reps[[i]]$screeData$wUnifrac[1:5],sparse.otu.001.reps[[i]]$screeData$eUnifrac[1:5])
+# }
+
+# #0.01% sparsity filter
+# sparse.otu.0001 <- high.otu[,(which(high.otu.sum >= (0.0001*high.total.sum)))]
+# sparse.otu.0001.reps <- list()
+# #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+# sparse.otu.0001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.otu.0001.plot.data) <- plotDataTextLabels
+
+# sparse.otu.0001.dist <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.otu.0001.dist) <- plotDataTextLabels
+# sparse.otu.0001.sd <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.otu.0001.sd) <- plotDataTextLabels
+
+# for (i in 1:replicates) {
+# 	sparse.otu.0001.reps[[i]] <- runReplicate(sparse.otu.0001,high.groups,high.tree,50)
+# 	sparse.otu.0001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.0001.reps[[i]]$effect)))
+# 	sparse.otu.0001.dist[i,] <- c(sparse.otu.0001.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.otu.0001.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.otu.0001.reps[[i]]$meanDist.SD[[3]]$meanDist)
+# 	sparse.otu.0001.sd[i,] <- c(sparse.otu.0001.reps[[i]]$meanDist.SD[[1]]$error,sparse.otu.0001.reps[[i]]$meanDist.SD[[2]]$error,sparse.otu.0001.reps[[i]]$meanDist.SD[[3]]$error)
+# }
+
+# #0.001% sparsity filter
+# sparse.otu.00001 <- high.otu[,(which(high.otu.sum >= (0.00001*high.total.sum)))]
+# sparse.otu.00001.reps <- list()
+# #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+# sparse.otu.00001.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.otu.00001.plot.data) <- plotDataTextLabels
+
+# sparse.otu.00001.dist <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.otu.00001.dist) <- plotDataTextLabels
+# sparse.otu.00001.sd <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.otu.00001.sd) <- plotDataTextLabels
+
+# for (i in 1:replicates) {
+# 	sparse.otu.00001.reps[[i]] <- runReplicate(sparse.otu.00001,high.groups,high.tree,50)
+# 	sparse.otu.00001.plot.data[i,] <- unlist(data.frame(t(sparse.otu.00001.reps[[i]]$effect)))
+# 	sparse.otu.00001.dist[i,] <- c(sparse.otu.00001.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.otu.00001.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.otu.00001.reps[[i]]$meanDist.SD[[3]]$meanDist)
+# 	sparse.otu.00001.sd[i,] <- c(sparse.otu.00001.reps[[i]]$meanDist.SD[[1]]$error,sparse.otu.00001.reps[[i]]$meanDist.SD[[2]]$error,sparse.otu.00001.reps[[i]]$meanDist.SD[[3]]$error)
+# }
+
+
+
+# ##### NEED TO MAKE AXIS LOOK RIGHT + plot other stuff
+
+# pdf("sparsityTestPlots.pdf")
+# par(mar=c(13, 4, 4, 2) + 0.1)
+# par(cex.lab=1.3)
+# par(cex.main=1.5)
+# stripchart(sparse.otu.001.plot.data,vertical=TRUE,main="Sparsity filter at 0.1%",group.names=colnames(sparse.otu.001.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+# stripchart(sparse.otu.0001.plot.data,vertical=TRUE,main="Sparsity filter at 0.01%",group.names=colnames(sparse.otu.0001.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+# stripchart(sparse.otu.00001.plot.data,vertical=TRUE,main="sparsity filter at 0.001%",group.names=colnames(sparse.otu.00001.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+# par(originalPar)
+
+# par(mar=c(13, 6, 4, 2) + 0.1)
+
+# meanDist <- unlist(lapply(sparse.otu.001.dist,mean))
+# meanSd <- unlist(lapply(sparse.otu.001.sd,mean))
+# myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.1%")
+# segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+
+# meanDist <- unlist(lapply(sparse.otu.0001.dist,mean))
+# meanSd <- unlist(lapply(sparse.otu.0001.sd,mean))
+# myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.01%")
+# segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+
+# meanDist <- unlist(lapply(sparse.otu.00001.dist,mean))
+# meanSd <- unlist(lapply(sparse.otu.00001.sd,mean))
+# myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.001%")
+# segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+
+# par(originalPar)
+
+# screePlotData <- apply(sparse.otu.001.scree,2,mean)
+# screePlotError <- apply(sparse.otu.001.scree,2,sd)
+# myBarPlot <- barplot(screePlotData,col=transparentdarkorchid,las=2,ylim=c(0,1),ylab="Variation explained by each axis of PCoA",main="Sparsity filter at 0.1%")
+# segments(myBarPlot, screePlotData - screePlotError, myBarPlot, screePlotData + screePlotError, lwd=2)
+# segments(myBarPlot - 0.1, screePlotData - screePlotError, myBarPlot + 0.1, screePlotData - screePlotError, lwd=2)
+# segments(myBarPlot - 0.1, screePlotData + screePlotError, myBarPlot + 0.1, screePlotData + screePlotError, lwd=2)
+
+
+# dev.off()
 
 # SPARSITY DIFFERENCE TEST
 sparse.diff.otu.001 <- high.otu
