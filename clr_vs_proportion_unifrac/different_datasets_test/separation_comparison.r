@@ -99,8 +99,10 @@ addDisimilarOTUs <- function(otu1,otu2,tree) {
 
 compare <- function(replicateMethod, otuList, groupList, comparisonList, tree, comparisonTitleList, fileName, nSamples) {
 	pdf(fileName)
-
+	print(paste("length of comparisonList",length(comparisonList)))
 	for (i in 1:length(comparisonList)) {
+		print(paste("comparison list",i))
+		print(comparisonList[[i]])
 		compare <- comparisonList[[i]]
 		index1 <- compare[1]
 		otu1 <- otuList[[index1]]
@@ -151,14 +153,16 @@ getReplicate <- function(replicateMethod,otu1,group1,tree,plotTitle,nSamplesgrou
 	}
 
 	#make plots
+	originalPar <- par()
 
-	pdf("sparsityTestPlots.pdf")
+	#effect size plot
 	par(mar=c(13, 4, 4, 2) + 0.1)
 	par(cex.lab=1.3)
 	par(cex.main=1.5)
 	stripchart(plot.data,vertical=TRUE,main="Sparsity filter at 0.1%",group.names=colnames(plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
 	par(originalPar)
 
+	#mean separation with standard deviation plot (averaged over 5 replicates .....)
 	par(mar=c(13, 6, 4, 2) + 0.1)
 
 	meanDist <- unlist(lapply(dist,mean))
@@ -168,6 +172,7 @@ getReplicate <- function(replicateMethod,otu1,group1,tree,plotTitle,nSamplesgrou
 	segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
 	segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
 
+	# scree plots
 	par(originalPar)
 
 	screePlotData <- apply(scree,2,mean)
@@ -176,6 +181,12 @@ getReplicate <- function(replicateMethod,otu1,group1,tree,plotTitle,nSamplesgrou
 	segments(myBarPlot, screePlotData - screePlotError, myBarPlot, screePlotData + screePlotError, lwd=2)
 	segments(myBarPlot - 0.1, screePlotData - screePlotError, myBarPlot + 0.1, screePlotData - screePlotError, lwd=2)
 	segments(myBarPlot - 0.1, screePlotData + screePlotError, myBarPlot + 0.1, screePlotData + screePlotError, lwd=2)
+
+	# pcoa plots, only plot first replicate in each comparison
+	plot(reps[[1]]$pcoa$uwUnifrac$vectors[,1],reps[[1]]$pcoa$uwUnifrac$vectors[,2], type="p",col=group1,main="unweighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(reps[[1]]$screeData$uwUnifrac[1],digits=3),"variance explained"),ylab=paste("Second Component", round(reps[[1]]$screeData$uwUnifrac[2],digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
+	plot(reps[[1]]$pcoa$wUnifrac$vectors[,1],reps[[1]]$pcoa$uwUnifrac$vectors[,2], type="p",col=group1,main="unweighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(reps[[1]]$screeData$wUnifrac[1],digits=3),"variance explained"),ylab=paste("Second Component", round(reps[[1]]$screeData$wUnifrac[2],digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
+	plot(reps[[1]]$pcoa$eUnifrac$vectors[,1],reps[[1]]$pcoa$uwUnifrac$vectors[,2], type="p",col=group1,main="unweighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(reps[[1]]$screeData$eUnifrac[1],digits=3),"variance explained"),ylab=paste("Second Component", round(reps[[1]]$screeData$eUnifrac[2],digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
+
 
 	par(originalPar)
 	# return replicate
