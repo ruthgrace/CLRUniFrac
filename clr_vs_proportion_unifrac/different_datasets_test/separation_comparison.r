@@ -123,6 +123,12 @@ compare <- function(replicateMethod, otuList, groupList, comparisonList, tree, c
 
 }
 
+darkorchid <- col2rgb("darkorchid4")
+transparentdarkorchid <- rgb(darkorchid[1]/255,darkorchid[2]/255,darkorchid[3]/255,0.3)
+
+aquamarine <- col2rgb("aquamarine4")
+transparentaquamarine <- rgb(aquamarine[1]/255,aquamarine[2]/255,aquamarine[3]/255,0.3)
+
 getReplicate <- function(replicateMethod,otu1,group1,tree,plotTitle,nSamplesgroup2=NULL,otu2=NULL) {
 	#do comparisons
 	reps <- list()
@@ -174,7 +180,7 @@ getReplicate <- function(replicateMethod,otu1,group1,tree,plotTitle,nSamplesgrou
 
 	# scree plots
 	par(originalPar)
-
+	par(mar=c(12, 6, 4, 2) + 0.1)
 	screePlotData <- apply(scree,2,mean)
 	screePlotError <- apply(scree,2,sd)
 	myBarPlot <- barplot(screePlotData,col=transparentdarkorchid,las=2,ylim=c(0,1),ylab="Variation explained by each axis of PCoA",main="Sparsity filter at 0.1%")
@@ -182,10 +188,13 @@ getReplicate <- function(replicateMethod,otu1,group1,tree,plotTitle,nSamplesgrou
 	segments(myBarPlot - 0.1, screePlotData - screePlotError, myBarPlot + 0.1, screePlotData - screePlotError, lwd=2)
 	segments(myBarPlot - 0.1, screePlotData + screePlotError, myBarPlot + 0.1, screePlotData + screePlotError, lwd=2)
 
+	par(originalPar)
 	# pcoa plots, only plot first replicate in each comparison
-	plot(reps[[1]]$pcoa$uwUnifrac$vectors[,1],reps[[1]]$pcoa$uwUnifrac$vectors[,2], type="p",col=group1,main="unweighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(reps[[1]]$screeData$uwUnifrac[1],digits=3),"variance explained"),ylab=paste("Second Component", round(reps[[1]]$screeData$uwUnifrac[2],digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
-	plot(reps[[1]]$pcoa$wUnifrac$vectors[,1],reps[[1]]$pcoa$uwUnifrac$vectors[,2], type="p",col=group1,main="unweighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(reps[[1]]$screeData$wUnifrac[1],digits=3),"variance explained"),ylab=paste("Second Component", round(reps[[1]]$screeData$wUnifrac[2],digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
-	plot(reps[[1]]$pcoa$eUnifrac$vectors[,1],reps[[1]]$pcoa$uwUnifrac$vectors[,2], type="p",col=group1,main="unweighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(reps[[1]]$screeData$eUnifrac[1],digits=3),"variance explained"),ylab=paste("Second Component", round(reps[[1]]$screeData$eUnifrac[2],digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
+	palette(transparentdarkorchid,transparentaquamarine,"blue","black")
+	pcoaGroups <- as.factor(c(rep(1,nSamples),rep(2,nSamples)))
+	plot(reps[[1]]$pcoa$uwUnifrac$vectors[,1],reps[[1]]$pcoa$uwUnifrac$vectors[,2], type="p",col=pcoaGroups,main="Unweighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(reps[[1]]$screeData$uwUnifrac[1],digits=3),"variance explained"),ylab=paste("Second Component", round(reps[[1]]$screeData$uwUnifrac[2],digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
+	plot(reps[[1]]$pcoa$wUnifrac$vectors[,1],reps[[1]]$pcoa$uwUnifrac$vectors[,2], type="p",col=pcoaGroups,main="Weighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(reps[[1]]$screeData$wUnifrac[1],digits=3),"variance explained"),ylab=paste("Second Component", round(reps[[1]]$screeData$wUnifrac[2],digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
+	plot(reps[[1]]$pcoa$eUnifrac$vectors[,1],reps[[1]]$pcoa$uwUnifrac$vectors[,2], type="p",col=pcoaGroups,main="Information UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(reps[[1]]$screeData$eUnifrac[1],digits=3),"variance explained"),ylab=paste("Second Component", round(reps[[1]]$screeData$eUnifrac[2],digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
 
 
 	par(originalPar)
