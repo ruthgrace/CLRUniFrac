@@ -9,6 +9,31 @@ library(vegan)
 originalPar <- par()
 
 
+source("../metrics.r")
+
+replicates <- 5
+extraReplicates <- 10
+
+darkorchid <- col2rgb("darkorchid4")
+transparentdarkorchid <- rgb(darkorchid[1]/255,darkorchid[2]/255,darkorchid[3]/255,0.3)
+
+aquamarine <- col2rgb("aquamarine4")
+transparentaquamarine <- rgb(aquamarine[1]/255,aquamarine[2]/255,aquamarine[3]/255,0.3)
+
+pcoaLabels <- c(rep("pcoa1",3),rep("pcoa12",3),rep("pcoa123",3))
+unifracLabels <- rep(c("uwUnifrac","wUnifrac","iUnifrac"),3)
+plotDataColNames <- paste(pcoaLabels, unifracLabels, sep = ".")
+
+pcoaText <- c(rep("PCoA first component",3),rep("PCoA first 2 components",3),rep("PCoA first 3 components",3))
+unifracText <- rep(c("Unweighted UniFrac","Weighted UniFrac","Information UniFrac"),3)
+plotDataTextLabels <- paste(unifracText,pcoaText, sep = "\n")
+
+screeText <- paste("Axis",rep(c(1:5),3))
+screeUnifracTest <- rep(c("Unweighted UniFrac","Weighted UniFrac","Information UniFrac"),5)
+screeLabels <- paste(screeUnifracTest,screeText)
+
+
+
 rootTree <- function(tree) {
 	if (!is.rooted(tree)) {
 		tree <- midpoint(tree)
@@ -97,7 +122,7 @@ addDisimilarOTUs <- function(otu1,otu2,tree) {
 	return(returnList)
 }
 
-compare <- function(replicateMethod, otuList, groupList, comparisonList, tree, comparisonTitleList, fileName, nSamples) {
+compare <- function(replicateMethod, otuList, groupList, comparisonList, treeList, comparisonTitleList, fileName, nSamples) {
 	pdf(fileName)
 	print(paste("length of comparisonList",length(comparisonList)))
 	for (i in 1:length(comparisonList)) {
@@ -108,6 +133,7 @@ compare <- function(replicateMethod, otuList, groupList, comparisonList, tree, c
 		otu1 <- otuList[[index1]]
 		group1 <- groupList[[index1]]
 		plotTitle <- comparisonTitleList[i]
+		tree <- treeList[[i]]
 		if (identical(replicateMethod,runReplicate)) {
 			getReplicate(replicateMethod,otu1,group1,tree,plotTitle,nSamples)
 		}
@@ -123,13 +149,7 @@ compare <- function(replicateMethod, otuList, groupList, comparisonList, tree, c
 
 }
 
-darkorchid <- col2rgb("darkorchid4")
-transparentdarkorchid <- rgb(darkorchid[1]/255,darkorchid[2]/255,darkorchid[3]/255,0.3)
-
-aquamarine <- col2rgb("aquamarine4")
-transparentaquamarine <- rgb(aquamarine[1]/255,aquamarine[2]/255,aquamarine[3]/255,0.3)
-
-getReplicate <- function(replicateMethod,otu1,group1,tree,plotTitle,nSamplesgroup2=NULL,otu2=NULL) {
+getReplicate <- function(replicateMethod,otu1,group1,tree,plotTitle,nSamples,group2=NULL,otu2=NULL) {
 	#do comparisons
 	reps <- list()
 	#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
@@ -252,25 +272,17 @@ med.otu <- med.otu.unordered[,taxaOrder]
 taxaOrder <- rev(order(apply(high.otu.unordered,2,sum)))
 high.otu <- high.otu.unordered[,taxaOrder]
 
-source("../metrics.r")
 
-replicates <- 5
-extraReplicates <- 10
 
-darkorchid <- col2rgb("darkorchid4")
-transparentdarkorchid <- rgb(darkorchid[1]/255,darkorchid[2]/255,darkorchid[3]/255,0.3)
+selfComparisonList3 <- list()
+selfComparisonList3[[1]] <- c(1)
+selfComparisonList3[[2]] <- c(2)
+selfComparisonList3[[3]] <- c(3)
 
-pcoaLabels <- c(rep("pcoa1",3),rep("pcoa12",3),rep("pcoa123",3))
-unifracLabels <- rep(c("uwUnifrac","wUnifrac","iUnifrac"),3)
-plotDataColNames <- paste(pcoaLabels, unifracLabels, sep = ".")
-
-pcoaText <- c(rep("PCoA first component",3),rep("PCoA first 2 components",3),rep("PCoA first 3 components",3))
-unifracText <- rep(c("Unweighted UniFrac","Weighted UniFrac","Information UniFrac"),3)
-plotDataTextLabels <- paste(unifracText,pcoaText, sep = "\n")
-
-screeText <- paste("Axis",rep(c(1:5),3))
-screeUnifracTest <- rep(c("Unweighted UniFrac","Weighted UniFrac","Information UniFrac"),5)
-screeLabels <- paste(screeUnifracTest,screeText)
+mixedComparisonList3 <- list()
+mixedComparisonList3[[1]] <- c(1,2)
+mixedComparisonList3[[2]] <- c(1,3)
+mixedComparisonList3[[3]] <- c(3)
 
 # sparsityLabels <- c(rep("sparsity.001",3),rep("sparsity.0001",3),rep("sparsity.00001",3))
 # plotSparsityDataColNames <- paste(sparsityLabels, unifracLabels, sep = ".")
@@ -281,94 +293,119 @@ screeLabels <- paste(screeUnifracTest,screeText)
 
 
 # SEQUENCING DEPTH TEST
+
+depth <- list()
+
+depth$low <- low.otu
+depth$med <- med.otu
+depth$high <- high.otu
+
+depth.groups <- list()
+depth.groups$low <- low.groups
+depth.groups$med <- med.groups
+depth.groups$high <- high.groups
+
+depth.tree <- list()
+depth.tree$low <- low.tree
+depth.tree$med <- med.tree
+depth.tree$high <- high.tree
+
+comparisonTitleList <- c("Sequencing depth < 3000 reads/sample","Sequencing depth 3000-6000 reads/sample","Sequencing depth > 6000 reads/sample")
+fileName <- "sequencingDepthPlots.pdf"
+nSamples <- 50
+
+compare(runReplicate, sparse, depth.groups, selfComparisonList3, depth.tree, comparisonTitleList, fileName, nSamples)
+
+
+
 #low
-low.seq.depth.reps <- list()
-#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
-low.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(low.seq.depth.plot.data) <- plotDataTextLabels
+# low.seq.depth.reps <- list()
+# #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+# low.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(low.seq.depth.plot.data) <- plotDataTextLabels
 
-low.seq.depth.dist <- data.frame(matrix(nrow=5,ncol=9))
-colnames(low.seq.depth.dist) <- plotDataTextLabels
-low.seq.depth.sd <- data.frame(matrix(nrow=5,ncol=9))
-colnames(low.seq.depth.sd) <- plotDataTextLabels
+# low.seq.depth.dist <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(low.seq.depth.dist) <- plotDataTextLabels
+# low.seq.depth.sd <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(low.seq.depth.sd) <- plotDataTextLabels
 
-for (i in 1:replicates) {
-	low.seq.depth.reps[[i]] <- runReplicate(low.otu,low.groups,low.tree,50)
-	low.seq.depth.plot.data[i,] <- unlist(data.frame(t(low.seq.depth.reps[[i]]$effect)))
-	low.seq.depth.dist[i,] <- c(low.seq.depth.reps[[i]]$meanDist.SD[[1]]$meanDist,low.seq.depth.reps[[i]]$meanDist.SD[[2]]$meanDist,low.seq.depth.reps[[i]]$meanDist.SD[[3]]$meanDist)
-	low.seq.depth.sd[i,] <- c(low.seq.depth.reps[[i]]$meanDist.SD[[1]]$error,low.seq.depth.reps[[i]]$meanDist.SD[[2]]$error,low.seq.depth.reps[[i]]$meanDist.SD[[3]]$error)
-}
-
-
-#med
-med.seq.depth.reps <- list()
-med.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(med.seq.depth.plot.data) <- plotDataTextLabels
-
-med.seq.depth.dist <- data.frame(matrix(nrow=5,ncol=9))
-colnames(med.seq.depth.dist) <- plotDataTextLabels
-med.seq.depth.sd <- data.frame(matrix(nrow=5,ncol=9))
-colnames(med.seq.depth.sd) <- plotDataTextLabels
-
-for (i in 1:replicates) {
-	med.seq.depth.reps[[i]] <- runReplicate(med.otu,med.groups,med.tree,50)
-	med.seq.depth.plot.data[i,] <- unlist(data.frame(t(med.seq.depth.reps[[i]]$effect)))
-	med.seq.depth.dist[i,] <- c(med.seq.depth.reps[[i]]$meanDist.SD[[1]]$meanDist,med.seq.depth.reps[[i]]$meanDist.SD[[2]]$meanDist,med.seq.depth.reps[[i]]$meanDist.SD[[3]]$meanDist)
-	med.seq.depth.sd[i,] <- c(med.seq.depth.reps[[i]]$meanDist.SD[[1]]$error,med.seq.depth.reps[[i]]$meanDist.SD[[2]]$error,med.seq.depth.reps[[i]]$meanDist.SD[[3]]$error)
-}
-#high
-high.seq.depth.reps <- list()
-high.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(high.seq.depth.plot.data) <- plotDataTextLabels
-
-high.seq.depth.dist <- data.frame(matrix(nrow=5,ncol=9))
-colnames(high.seq.depth.dist) <- plotDataTextLabels
-high.seq.depth.sd <- data.frame(matrix(nrow=5,ncol=9))
-colnames(high.seq.depth.sd) <- plotDataTextLabels
-
-for (i in 1:replicates) {
-	high.seq.depth.reps[[i]] <- runReplicate(high.otu,high.groups,high.tree,50)
-	high.seq.depth.plot.data[i,] <- unlist(data.frame(t(high.seq.depth.reps[[i]]$effect)))
-	high.seq.depth.dist[i,] <- c(high.seq.depth.reps[[i]]$meanDist.SD[[1]]$meanDist,high.seq.depth.reps[[i]]$meanDist.SD[[2]]$meanDist,high.seq.depth.reps[[i]]$meanDist.SD[[3]]$meanDist)
-	high.seq.depth.sd[i,] <- c(high.seq.depth.reps[[i]]$meanDist.SD[[1]]$error,high.seq.depth.reps[[i]]$meanDist.SD[[2]]$error,high.seq.depth.reps[[i]]$meanDist.SD[[3]]$error)
-}
-
-#plot
-pdf("sequencingDepthPlots.pdf")
-par(mar=c(13, 4, 4, 2) + 0.1)
-par(cex.lab=1.3)
-par(cex.main=1.5)
-stripchart(low.seq.depth.plot.data,vertical=TRUE,main="Sequencing depth < 3000 reads/sample",group.names=colnames(low.seq.depth.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
-stripchart(med.seq.depth.plot.data,vertical=TRUE,main="Sequencing depth 3000-6000 reads/sample",group.names=colnames(med.seq.depth.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
-stripchart(high.seq.depth.plot.data,vertical=TRUE,main="Sequencing depth > 6000 reads/sample",group.names=colnames(high.seq.depth.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
-par(originalPar)
-
-par(mar=c(13, 6, 4, 2) + 0.1)
-
-meanDist <- unlist(lapply(low.seq.depth.dist,mean))
-meanSd <- unlist(lapply(low.seq.depth.sd,mean))
-myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sequencing depth < 3000 reads/sample")
-segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
-
-meanDist <- unlist(lapply(med.seq.depth.dist,mean))
-meanSd <- unlist(lapply(med.seq.depth.sd,mean))
-myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sequencing depth 3000-6000 reads/sample")
-segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
-
-meanDist <- unlist(lapply(high.seq.depth.dist,mean))
-meanSd <- unlist(lapply(high.seq.depth.sd,mean))
-myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sequencing depth > 6000 reads/sample")
-segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
-par(originalPar)
+# for (i in 1:replicates) {
+# 	low.seq.depth.reps[[i]] <- runReplicate(low.otu,low.groups,low.tree,50)
+# 	low.seq.depth.plot.data[i,] <- unlist(data.frame(t(low.seq.depth.reps[[i]]$effect)))
+# 	low.seq.depth.dist[i,] <- c(low.seq.depth.reps[[i]]$meanDist.SD[[1]]$meanDist,low.seq.depth.reps[[i]]$meanDist.SD[[2]]$meanDist,low.seq.depth.reps[[i]]$meanDist.SD[[3]]$meanDist)
+# 	low.seq.depth.sd[i,] <- c(low.seq.depth.reps[[i]]$meanDist.SD[[1]]$error,low.seq.depth.reps[[i]]$meanDist.SD[[2]]$error,low.seq.depth.reps[[i]]$meanDist.SD[[3]]$error)
+# }
 
 
-dev.off()
+# #med
+# med.seq.depth.reps <- list()
+# med.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(med.seq.depth.plot.data) <- plotDataTextLabels
+
+# med.seq.depth.dist <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(med.seq.depth.dist) <- plotDataTextLabels
+# med.seq.depth.sd <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(med.seq.depth.sd) <- plotDataTextLabels
+
+# for (i in 1:replicates) {
+# 	med.seq.depth.reps[[i]] <- runReplicate(med.otu,med.groups,med.tree,50)
+# 	med.seq.depth.plot.data[i,] <- unlist(data.frame(t(med.seq.depth.reps[[i]]$effect)))
+# 	med.seq.depth.dist[i,] <- c(med.seq.depth.reps[[i]]$meanDist.SD[[1]]$meanDist,med.seq.depth.reps[[i]]$meanDist.SD[[2]]$meanDist,med.seq.depth.reps[[i]]$meanDist.SD[[3]]$meanDist)
+# 	med.seq.depth.sd[i,] <- c(med.seq.depth.reps[[i]]$meanDist.SD[[1]]$error,med.seq.depth.reps[[i]]$meanDist.SD[[2]]$error,med.seq.depth.reps[[i]]$meanDist.SD[[3]]$error)
+# }
+# #high
+# high.seq.depth.reps <- list()
+# high.seq.depth.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(high.seq.depth.plot.data) <- plotDataTextLabels
+
+# high.seq.depth.dist <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(high.seq.depth.dist) <- plotDataTextLabels
+# high.seq.depth.sd <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(high.seq.depth.sd) <- plotDataTextLabels
+
+# for (i in 1:replicates) {
+# 	high.seq.depth.reps[[i]] <- runReplicate(high.otu,high.groups,high.tree,50)
+# 	high.seq.depth.plot.data[i,] <- unlist(data.frame(t(high.seq.depth.reps[[i]]$effect)))
+# 	high.seq.depth.dist[i,] <- c(high.seq.depth.reps[[i]]$meanDist.SD[[1]]$meanDist,high.seq.depth.reps[[i]]$meanDist.SD[[2]]$meanDist,high.seq.depth.reps[[i]]$meanDist.SD[[3]]$meanDist)
+# 	high.seq.depth.sd[i,] <- c(high.seq.depth.reps[[i]]$meanDist.SD[[1]]$error,high.seq.depth.reps[[i]]$meanDist.SD[[2]]$error,high.seq.depth.reps[[i]]$meanDist.SD[[3]]$error)
+# }
+
+# #plot
+# pdf("sequencingDepthPlots.pdf")
+# par(mar=c(13, 4, 4, 2) + 0.1)
+# par(cex.lab=1.3)
+# par(cex.main=1.5)
+# stripchart(low.seq.depth.plot.data,vertical=TRUE,main="Sequencing depth < 3000 reads/sample",group.names=colnames(low.seq.depth.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+# stripchart(med.seq.depth.plot.data,vertical=TRUE,main="Sequencing depth 3000-6000 reads/sample",group.names=colnames(med.seq.depth.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+# stripchart(high.seq.depth.plot.data,vertical=TRUE,main="Sequencing depth > 6000 reads/sample",group.names=colnames(high.seq.depth.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+# par(originalPar)
+
+# par(mar=c(13, 6, 4, 2) + 0.1)
+
+# meanDist <- unlist(lapply(low.seq.depth.dist,mean))
+# meanSd <- unlist(lapply(low.seq.depth.sd,mean))
+# myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sequencing depth < 3000 reads/sample")
+# segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+
+# meanDist <- unlist(lapply(med.seq.depth.dist,mean))
+# meanSd <- unlist(lapply(med.seq.depth.sd,mean))
+# myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sequencing depth 3000-6000 reads/sample")
+# segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+
+# meanDist <- unlist(lapply(high.seq.depth.dist,mean))
+# meanSd <- unlist(lapply(high.seq.depth.sd,mean))
+# myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sequencing depth > 6000 reads/sample")
+# segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+# par(originalPar)
+
+
+# dev.off()
 
 
 
@@ -484,16 +521,14 @@ sparse$otu.00001 <- high.otu[,(which(high.otu.sum >= (0.00001*high.total.sum)))]
 sparse.groups <- list()
 sparse.groups[[1]] <- sparse.groups[[2]] <- sparse.groups[[3]] <- high.groups
 
-selfComparisonList <- list()
-selfComparisonList[[1]] <- c(1)
-selfComparisonList[[2]] <- c(2)
-selfComparisonList[[3]] <- c(3)
+sparse.tree <- list()
+sparse.tree[[1]] <- sparse.tree[[2]] <- sparse.tree[[3]] <- high.tree
 
 comparisonTitleList <- c("Sparsity filter at 0.1%","Sparsity filter at 0.01%","Sparsity filter at 0.001%")
 fileName <- "sparsityTestPlots.pdf"
 nSamples <- 50
 
-compare(runReplicate, sparse, sparse.groups, selfComparisonList, high.tree, comparisonTitleList, fileName, nSamples)
+compare(runReplicate, sparse, sparse.groups, selfComparisonList3, sparse.tree, comparisonTitleList, fileName, nSamples)
 
 
 # #0.1% sparsity filter
@@ -607,103 +642,121 @@ compare(runReplicate, sparse, sparse.groups, selfComparisonList, high.tree, comp
 # dev.off()
 
 # SPARSITY DIFFERENCE TEST
-sparse.diff.otu.001 <- high.otu
-sparse.diff.otu.001[,(which(high.otu.sum < (0.001*high.total.sum)))] <- 0
-sparse.diff.otu.0001 <- high.otu
-sparse.diff.otu.0001[,(which(high.otu.sum < (0.0001*high.total.sum)))] <- 0
-sparse.diff.otu.00001 <- high.otu
-sparse.diff.otu.00001[,(which(high.otu.sum < (0.00001*high.total.sum)))] <- 0
 
-#low/med
-sparse.diff.otu.1.reps <- list()
-#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
-sparse.diff.otu.1.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.diff.otu.1.plot.data) <- plotDataTextLabels
+sparse.diff <- list()
 
-sparse.diff.1.dist <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.diff.1.dist) <- plotDataTextLabels
-sparse.diff.1.sd <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.diff.1.sd) <- plotDataTextLabels
+sparse.diff$otu.001 <- high.otu
+sparse.diff$otu.001[,(which(high.otu.sum < (0.001*high.total.sum)))] <- 0
+sparse.diff$otu.0001 <- high.otu
+sparse.diff$otu.0001[,(which(high.otu.sum < (0.0001*high.total.sum)))] <- 0
+sparse.diff$otu.00001 <- high.otu
+sparse.diff$otu.00001[,(which(high.otu.sum < (0.00001*high.total.sum)))] <- 0
 
-for (i in 1:replicates) {
-	sparse.diff.otu.1.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.0001,high.groups,high.groups,high.tree,50)
-	sparse.diff.otu.1.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.1.reps[[i]]$effect)))
-	sparse.diff.1.dist[i,] <- c(sparse.diff.1.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.diff.1.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.diff.1.reps[[i]]$meanDist.SD[[3]]$meanDist)
-	sparse.diff.1.sd[i,] <- c(sparse.diff.1.reps[[i]]$meanDist.SD[[1]]$error,sparse.diff.1.reps[[i]]$meanDist.SD[[2]]$error,sparse.diff.1.reps[[i]]$meanDist.SD[[3]]$error)
 
-}
+sparse.diff.groups <- list()
+sparse.diff.groups[[1]] <- sparse.diff.groups[[2]] <- sparse.diff.groups[[3]] <- high.groups
 
-#low/high
-sparse.diff.otu.2.reps <- list()
-#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
-sparse.diff.otu.2.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.diff.otu.2.plot.data) <- plotDataTextLabels
+sparse.diff.tree <- list()
+sparse.diff.tree[[1]] <- sparse.diff.tree[[2]] <- sparse.diff.tree[[3]] <- high.tree
 
-sparse.diff.2.dist <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.diff.2.dist) <- plotDataTextLabels
-sparse.diff.2.sd <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.diff.2.sd) <- plotDataTextLabels
+comparisonTitleList <- c("Sparsity filter at 0.1% vs 0.01%","Sparsity filter at 0.1% vs 0.001%","Sparsity filter at 0.01% vs 0.001%")
+fileName <- "sparsityDifferenceTestPlots.pdf"
+nSamples <- 50
 
-for (i in 1:replicates) {
-	sparse.diff.otu.2.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.00001,high.groups,high.groups,high.tree,50)
-	sparse.diff.otu.2.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.2.reps[[i]]$effect)))
-	sparse.diff.2.dist[i,] <- c(sparse.diff.2.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.diff.2.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.diff.2.reps[[i]]$meanDist.SD[[3]]$meanDist)
-	sparse.diff.2.sd[i,] <- c(sparse.diff.2.reps[[i]]$meanDist.SD[[1]]$error,sparse.diff.2.reps[[i]]$meanDist.SD[[2]]$error,sparse.diff.2.reps[[i]]$meanDist.SD[[3]]$error)
-}
+compare(runMixedReplicate, sparse.diff, sparse.diff.groups, mixedComparisonList3, sparse.diff.tree, comparisonTitleList, fileName, nSamples)
 
-#med/high
-sparse.diff.otu.3.reps <- list()
-#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
-sparse.diff.otu.3.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.diff.otu.3.plot.data) <- plotDataTextLabels
 
-sparse.diff.3.dist <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.diff.3.dist) <- plotDataTextLabels
-sparse.diff.3.sd <- data.frame(matrix(nrow=5,ncol=9))
-colnames(sparse.diff.3.sd) <- plotDataTextLabels
 
-for (i in 1:replicates) {
-	sparse.diff.otu.3.reps[[i]] <- runMixedReplicate(sparse.diff.otu.0001,sparse.diff.otu.00001,high.groups,high.groups,high.tree,50)
-	sparse.diff.otu.3.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.3.reps[[i]]$effect)))
-	sparse.diff.3.dist[i,] <- c(sparse.diff.3.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.diff.3.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.diff.3.reps[[i]]$meanDist.SD[[3]]$meanDist)
-	sparse.diff.3.sd[i,] <- c(sparse.diff.3.reps[[i]]$meanDist.SD[[1]]$error,sparse.diff.3.reps[[i]]$meanDist.SD[[2]]$error,sparse.diff.3.reps[[i]]$meanDist.SD[[3]]$error)
-}
+# #low/med
+# sparse.diff.otu.1.reps <- list()
+# #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+# sparse.diff.otu.1.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.diff.otu.1.plot.data) <- plotDataTextLabels
 
-pdf("sparsityDifferenceTestPlots.pdf")
-par(mar=c(13, 4, 4, 2) + 0.1)
-par(cex.lab=1.3)
-par(cex.main=1.5)
-stripchart(sparse.diff.otu.1.plot.data,vertical=TRUE,main="Sparsity filter at 0.1% vs 0.01%",group.names=colnames(sparse.diff.otu.1.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
-stripchart(sparse.diff.otu.2.plot.data,vertical=TRUE,main="Sparsity filter at 0.1% vs 0.001%",group.names=colnames(sparse.diff.otu.2.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
-stripchart(sparse.diff.otu.3.plot.data,vertical=TRUE,main="Sparsity filter at 0.01% vs 0.001%",group.names=colnames(sparse.diff.otu.3.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
-par(originalPar)
+# sparse.diff.1.dist <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.diff.1.dist) <- plotDataTextLabels
+# sparse.diff.1.sd <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.diff.1.sd) <- plotDataTextLabels
 
-par(mar=c(13, 6, 4, 2) + 0.1)
+# for (i in 1:replicates) {
+# 	sparse.diff.otu.1.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.0001,high.groups,high.groups,high.tree,50)
+# 	sparse.diff.otu.1.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.1.reps[[i]]$effect)))
+# 	sparse.diff.1.dist[i,] <- c(sparse.diff.1.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.diff.1.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.diff.1.reps[[i]]$meanDist.SD[[3]]$meanDist)
+# 	sparse.diff.1.sd[i,] <- c(sparse.diff.1.reps[[i]]$meanDist.SD[[1]]$error,sparse.diff.1.reps[[i]]$meanDist.SD[[2]]$error,sparse.diff.1.reps[[i]]$meanDist.SD[[3]]$error)
 
-meanDist <- unlist(lapply(sparse.diff.1.dist,mean))
-meanSd <- unlist(lapply(sparse.diff.1.sd,mean))
-myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.1% vs 0.01%")
-segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+# }
 
-meanDist <- unlist(lapply(sparse.diff.2.dist,mean))
-meanSd <- unlist(lapply(sparse.diff.2.sd,mean))
-myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.1% vs 0.001%")
-segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+# #low/high
+# sparse.diff.otu.2.reps <- list()
+# #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+# sparse.diff.otu.2.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.diff.otu.2.plot.data) <- plotDataTextLabels
 
-meanDist <- unlist(lapply(sparse.diff.3.dist,mean))
-meanSd <- unlist(lapply(sparse.diff.3.sd,mean))
-myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.01% vs 0.001%")
-segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+# sparse.diff.2.dist <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.diff.2.dist) <- plotDataTextLabels
+# sparse.diff.2.sd <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.diff.2.sd) <- plotDataTextLabels
 
-par(originalPar)
+# for (i in 1:replicates) {
+# 	sparse.diff.otu.2.reps[[i]] <- runMixedReplicate(sparse.diff.otu.001,sparse.diff.otu.00001,high.groups,high.groups,high.tree,50)
+# 	sparse.diff.otu.2.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.2.reps[[i]]$effect)))
+# 	sparse.diff.2.dist[i,] <- c(sparse.diff.2.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.diff.2.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.diff.2.reps[[i]]$meanDist.SD[[3]]$meanDist)
+# 	sparse.diff.2.sd[i,] <- c(sparse.diff.2.reps[[i]]$meanDist.SD[[1]]$error,sparse.diff.2.reps[[i]]$meanDist.SD[[2]]$error,sparse.diff.2.reps[[i]]$meanDist.SD[[3]]$error)
+# }
 
-dev.off()
+# #med/high
+# sparse.diff.otu.3.reps <- list()
+# #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+# sparse.diff.otu.3.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.diff.otu.3.plot.data) <- plotDataTextLabels
+
+# sparse.diff.3.dist <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.diff.3.dist) <- plotDataTextLabels
+# sparse.diff.3.sd <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(sparse.diff.3.sd) <- plotDataTextLabels
+
+# for (i in 1:replicates) {
+# 	sparse.diff.otu.3.reps[[i]] <- runMixedReplicate(sparse.diff.otu.0001,sparse.diff.otu.00001,high.groups,high.groups,high.tree,50)
+# 	sparse.diff.otu.3.plot.data[i,] <- unlist(data.frame(t(sparse.diff.otu.3.reps[[i]]$effect)))
+# 	sparse.diff.3.dist[i,] <- c(sparse.diff.3.reps[[i]]$meanDist.SD[[1]]$meanDist,sparse.diff.3.reps[[i]]$meanDist.SD[[2]]$meanDist,sparse.diff.3.reps[[i]]$meanDist.SD[[3]]$meanDist)
+# 	sparse.diff.3.sd[i,] <- c(sparse.diff.3.reps[[i]]$meanDist.SD[[1]]$error,sparse.diff.3.reps[[i]]$meanDist.SD[[2]]$error,sparse.diff.3.reps[[i]]$meanDist.SD[[3]]$error)
+# }
+
+# pdf("sparsityDifferenceTestPlots.pdf")
+# par(mar=c(13, 4, 4, 2) + 0.1)
+# par(cex.lab=1.3)
+# par(cex.main=1.5)
+# stripchart(sparse.diff.otu.1.plot.data,vertical=TRUE,main="Sparsity filter at 0.1% vs 0.01%",group.names=colnames(sparse.diff.otu.1.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+# stripchart(sparse.diff.otu.2.plot.data,vertical=TRUE,main="Sparsity filter at 0.1% vs 0.001%",group.names=colnames(sparse.diff.otu.2.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+# stripchart(sparse.diff.otu.3.plot.data,vertical=TRUE,main="Sparsity filter at 0.01% vs 0.001%",group.names=colnames(sparse.diff.otu.3.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+# par(originalPar)
+
+# par(mar=c(13, 6, 4, 2) + 0.1)
+
+# meanDist <- unlist(lapply(sparse.diff.1.dist,mean))
+# meanSd <- unlist(lapply(sparse.diff.1.sd,mean))
+# myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.1% vs 0.01%")
+# segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+
+# meanDist <- unlist(lapply(sparse.diff.2.dist,mean))
+# meanSd <- unlist(lapply(sparse.diff.2.sd,mean))
+# myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.1% vs 0.001%")
+# segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+
+# meanDist <- unlist(lapply(sparse.diff.3.dist,mean))
+# meanSd <- unlist(lapply(sparse.diff.3.sd,mean))
+# myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Sparsity filter at 0.01% vs 0.001%")
+# segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+
+# par(originalPar)
+
+# dev.off()
 
 
 # SHANNON DIVERSITY TEST
@@ -721,69 +774,93 @@ low.diversity <- high.otu[low.diversity.indices,]
 high.diversity.groups <- high.groups[high.diversity.indices]
 low.diversity.groups <- high.groups[low.diversity.indices]
 
-#low diversity
-low.diversity.otu.reps <- list()
-#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
-low.diversity.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(low.diversity.plot.data) <- plotDataTextLabels
 
-low.diversity.dist <- data.frame(matrix(nrow=5,ncol=9))
-colnames(low.diversity.dist) <- plotDataTextLabels
-low.diversity.sd <- data.frame(matrix(nrow=5,ncol=9))
-colnames(low.diversity.sd) <- plotDataTextLabels
+diversity <- list()
 
-for (i in 1:extraReplicates) {
-	low.diversity.otu.reps[[i]] <- runReplicate(low.diversity,low.diversity.groups,high.tree,10)
-	low.diversity.plot.data[i,] <- unlist(data.frame(t(low.diversity.otu.reps[[i]]$effect)))
-	low.diversity.dist[i,] <- c(low.diversity.reps[[i]]$meanDist.SD[[1]]$meanDist,low.diversity.reps[[i]]$meanDist.SD[[2]]$meanDist,low.diversity.reps[[i]]$meanDist.SD[[3]]$meanDist)
-	low.diversity.sd[i,] <- c(low.diversity.reps[[i]]$meanDist.SD[[1]]$error,low.diversity.reps[[i]]$meanDist.SD[[2]]$error,low.diversity.reps[[i]]$meanDist.SD[[3]]$error)
-}
+diversity$low <- low.diversity
+diversity$high <- high.diversity
 
-#high diversity
-high.diversity.otu.reps <- list()
-#columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
-high.diversity.plot.data <- data.frame(matrix(nrow=5,ncol=9))
-colnames(high.diversity.plot.data) <- plotDataTextLabels
+diversity.groups <- list()
+diversity.groups$low <- low.diversity.groups
+diversity.groups$high <- high.diversity.groups
 
-high.diversity.dist <- data.frame(matrix(nrow=5,ncol=9))
-colnames(high.diversity.dist) <- plotDataTextLabels
-high.diversity.sd <- data.frame(matrix(nrow=5,ncol=9))
-colnames(high.diversity.sd) <- plotDataTextLabels
+selfComparisonList2 <- list()
+selfComparisonList2[[1]] <- c(1)
+selfComparisonList2[[2]] <- c(2)
 
-for (i in 1:extraReplicates) {
-	high.diversity.otu.reps[[i]] <- runReplicate(high.diversity,high.diversity.groups,high.tree,10)
-	high.diversity.plot.data[i,] <- unlist(data.frame(t(high.diversity.otu.reps[[i]]$effect)))
-	high.diversity.dist[i,] <- c(high.diversity.reps[[i]]$meanDist.SD[[1]]$meanDist,high.diversity.reps[[i]]$meanDist.SD[[2]]$meanDist,high.diversity.reps[[i]]$meanDist.SD[[3]]$meanDist)
-	high.diversity.sd[i,] <- c(high.diversity.reps[[i]]$meanDist.SD[[1]]$error,high.diversity.reps[[i]]$meanDist.SD[[2]]$error,high.diversity.reps[[i]]$meanDist.SD[[3]]$error)
-}
+diversity.tree <- list()
+diversity.tree[[1]] <- diversity.tree[[2]] <- high.tree
 
-pdf("diversityTestPlots.pdf")
-par(mar=c(13, 4, 4, 2) + 0.1)
-par(cex.lab=1.3)
-par(cex.main=1.5)
-stripchart(low.diversity.plot.data,vertical=TRUE,main="Shannon diversity < 5.7",group.names=colnames(low.diversity.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
-stripchart(high.diversity.plot.data,vertical=TRUE,main="Shannon diversity > 6",group.names=colnames(high.diversity.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
-par(originalPar)
+comparisonTitleList <- c("Shannon diversity < 5.7","Shannon diversity > 6")
+fileName <- "diversityTestPlots.pdf"
+nSamples <- 10
 
-par(mar=c(13, 6, 4, 2) + 0.1)
+compare(runReplicate, sparse, depth.groups, selfComparisonList2, depth.tree, comparisonTitleList, fileName, nSamples)
 
-meanDist <- unlist(lapply(low.diversity.dist,mean))
-meanSd <- unlist(lapply(low.diversity.sd,mean))
-myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Shannon diversity < 5.7")
-segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
 
-meanDist <- unlist(lapply(high.diversity.dist,mean))
-meanSd <- unlist(lapply(high.diversity.sd,mean))
-myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Shannon diversity > 6")
-segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
-segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+# #low diversity
+# low.diversity.otu.reps <- list()
+# #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+# low.diversity.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(low.diversity.plot.data) <- plotDataTextLabels
 
-par(originalPar)
+# low.diversity.dist <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(low.diversity.dist) <- plotDataTextLabels
+# low.diversity.sd <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(low.diversity.sd) <- plotDataTextLabels
 
-dev.off()
+# for (i in 1:extraReplicates) {
+# 	low.diversity.otu.reps[[i]] <- runReplicate(low.diversity,low.diversity.groups,high.tree,10)
+# 	low.diversity.plot.data[i,] <- unlist(data.frame(t(low.diversity.otu.reps[[i]]$effect)))
+# 	low.diversity.dist[i,] <- c(low.diversity.reps[[i]]$meanDist.SD[[1]]$meanDist,low.diversity.reps[[i]]$meanDist.SD[[2]]$meanDist,low.diversity.reps[[i]]$meanDist.SD[[3]]$meanDist)
+# 	low.diversity.sd[i,] <- c(low.diversity.reps[[i]]$meanDist.SD[[1]]$error,low.diversity.reps[[i]]$meanDist.SD[[2]]$error,low.diversity.reps[[i]]$meanDist.SD[[3]]$error)
+# }
+
+# #high diversity
+# high.diversity.otu.reps <- list()
+# #columns are unifrac, weighted unifrac, info unifrac for each of separation on component 1, 1&2, 1&2&3
+# high.diversity.plot.data <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(high.diversity.plot.data) <- plotDataTextLabels
+
+# high.diversity.dist <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(high.diversity.dist) <- plotDataTextLabels
+# high.diversity.sd <- data.frame(matrix(nrow=5,ncol=9))
+# colnames(high.diversity.sd) <- plotDataTextLabels
+
+# for (i in 1:extraReplicates) {
+# 	high.diversity.otu.reps[[i]] <- runReplicate(high.diversity,high.diversity.groups,high.tree,10)
+# 	high.diversity.plot.data[i,] <- unlist(data.frame(t(high.diversity.otu.reps[[i]]$effect)))
+# 	high.diversity.dist[i,] <- c(high.diversity.reps[[i]]$meanDist.SD[[1]]$meanDist,high.diversity.reps[[i]]$meanDist.SD[[2]]$meanDist,high.diversity.reps[[i]]$meanDist.SD[[3]]$meanDist)
+# 	high.diversity.sd[i,] <- c(high.diversity.reps[[i]]$meanDist.SD[[1]]$error,high.diversity.reps[[i]]$meanDist.SD[[2]]$error,high.diversity.reps[[i]]$meanDist.SD[[3]]$error)
+# }
+
+# pdf("diversityTestPlots.pdf")
+# par(mar=c(13, 4, 4, 2) + 0.1)
+# par(cex.lab=1.3)
+# par(cex.main=1.5)
+# stripchart(low.diversity.plot.data,vertical=TRUE,main="Shannon diversity < 5.7",group.names=colnames(low.diversity.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+# stripchart(high.diversity.plot.data,vertical=TRUE,main="Shannon diversity > 6",group.names=colnames(high.diversity.plot.data),pch=19,col=transparentdarkorchid,las=2,ylab="Effect size")
+# par(originalPar)
+
+# par(mar=c(13, 6, 4, 2) + 0.1)
+
+# meanDist <- unlist(lapply(low.diversity.dist,mean))
+# meanSd <- unlist(lapply(low.diversity.sd,mean))
+# myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Shannon diversity < 5.7")
+# segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+
+# meanDist <- unlist(lapply(high.diversity.dist,mean))
+# meanSd <- unlist(lapply(high.diversity.sd,mean))
+# myBarPlot <- barplot(meanDist,col=transparentdarkorchid,las=2,ylim=c(0,1.2),ylab="Difference between mean positions on\nfirst PCoA component between groups",main="Shannon diversity > 6")
+# segments(myBarPlot, meanDist - meanSd, myBarPlot, meanDist + meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist - meanSd, myBarPlot + 0.1, meanDist - meanSd, lwd=2)
+# segments(myBarPlot - 0.1, meanDist + meanSd, myBarPlot + 0.1, meanDist + meanSd, lwd=2)
+
+# par(originalPar)
+
+# dev.off()
 
 
 # SHANNON DIVERSITY DIFFERENCE TEST
