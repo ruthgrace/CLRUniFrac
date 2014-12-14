@@ -210,7 +210,7 @@ getReplicate <- function(replicateMethod,otu1,group1,tree,plotTitle,nSamples,gro
 
 	par(originalPar)
 	# pcoa plots, only plot first replicate in each comparison
-	palette(transparentdarkorchid,transparentaquamarine,"blue","black")
+	palette(c(transparentdarkorchid,transparentaquamarine,"blue","black"))
 	pcoaGroups <- as.factor(c(rep(1,nSamples),rep(2,nSamples)))
 	plot(reps[[1]]$pcoa$uwUnifrac$vectors[,1],reps[[1]]$pcoa$uwUnifrac$vectors[,2], type="p",col=pcoaGroups,main="Unweighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(reps[[1]]$screeData$uwUnifrac[1],digits=3),"variance explained"),ylab=paste("Second Component", round(reps[[1]]$screeData$uwUnifrac[2],digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
 	plot(reps[[1]]$pcoa$wUnifrac$vectors[,1],reps[[1]]$pcoa$uwUnifrac$vectors[,2], type="p",col=pcoaGroups,main="Weighted UniFrac\nprincipal coordinates analysis",xlab=paste("First Component", round(reps[[1]]$screeData$wUnifrac[1],digits=3),"variance explained"),ylab=paste("Second Component", round(reps[[1]]$screeData$wUnifrac[2],digits=3),"variance explained"),pch=19,cex.lab=1.4,cex.main=2)
