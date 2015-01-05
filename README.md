@@ -65,4 +65,7 @@ Generalized UniFrac script with weighting replaced by a centered log ratio trans
 #####[GUniFrac.r](GUniFrac.r)
 Generalized UniFrac script ripped straight from the [GUniFrac R package][1]
 
+##required packages
+ape: http://cran.r-project.org/web/packages/ape/index.html
+
 [1]: http://cran.r-project.org/web/packages/GUniFrac/index.html
